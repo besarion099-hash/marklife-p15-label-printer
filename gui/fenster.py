@@ -11,6 +11,8 @@ from PySide6.QtWidgets import (QFileDialog, QInputDialog, QMainWindow, QMessageB
                                QSplitter, QToolBar, QVBoxLayout, QWidget)
 
 from gui.arbeiter import im_hintergrund
+from gui.aufkleber import AufkleberDialog, als_png
+from kern import aufkleber as ak
 from gui.bilder import bild_lesen, startordner
 from gui.druckleiste import Druckleiste
 from gui.eigenschaften import Eigenschaften
@@ -22,7 +24,7 @@ from kern import etikett as et
 FILTER = "Etikett-Vorlagen (*.etikett.json)"
 BILDER = "Bilder (*.png *.jpg *.jpeg *.bmp *.gif)"
 WERKZEUGE = [("text", "Text"), ("qr", "QR-Code"), ("barcode", "Barcode"), ("bild", "Bild …"),
-             ("rahmen", "Rahmen"), ("linie", "Linie")]
+             ("aufkleber", "Aufkleber …"), ("rahmen", "Rahmen"), ("linie", "Linie")]
 
 
 class Hauptfenster(QMainWindow):
@@ -34,6 +36,7 @@ class Hauptfenster(QMainWindow):
         self._verbinden = verbinden
         self.pfad = None
         self._faden = self._arbeiter = None
+        self._katalog = None             # Aufkleber, erst beim ersten Oeffnen eingelesen
         self.melden = lambda titel, text: QMessageBox.warning(self, titel, text)
         self.leiste = Druckleiste(self.e, port_quelle)
         self.flaeche = Flaeche()
@@ -129,6 +132,10 @@ class Hauptfenster(QMainWindow):
                 return
             self.e.letzter_ordner = str(Path(pfad).parent)
             element = et.Bild(x_mm=1, y_mm=1, breite_mm=h - 2, hoehe_mm=h - 2, daten=daten)
+        elif art == "aufkleber":
+            element = self._aufkleber_waehlen(h)
+            if element is None:
+                return
         elif art == "rahmen":
             element = et.Rahmen(x_mm=0, y_mm=0, breite_mm=b, hoehe_mm=h)
         else:
@@ -136,6 +143,15 @@ class Hauptfenster(QMainWindow):
         self.etikett.elemente.append(element)
         self.flaeche.neu_zeichnen()
         self.flaeche.waehle(len(self.etikett.elemente) - 1)
+
+    def _aufkleber_waehlen(self, h):
+        if self._katalog is None:
+            self._katalog = ak.katalog()
+        dialog = AufkleberDialog(self._katalog, self)
+        if not dialog.exec() or dialog.gewaehlt is None:
+            return None
+        return et.Bild(x_mm=1, y_mm=1, breite_mm=h - 2, hoehe_mm=h - 2,
+                       daten=als_png(dialog.gewaehlt))
 
     def neu(self):
         if self.etikett.elemente and QMessageBox.question(

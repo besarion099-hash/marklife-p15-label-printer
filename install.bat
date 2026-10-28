@@ -24,6 +24,7 @@ echo Erstelle venv ...
 "%HIER%venv\Scripts\python.exe" -m pip install --upgrade pip
 "%HIER%venv\Scripts\python.exe" -m pip install -r "%HIER%requirements.txt"
 
+"%HIER%venv\Scripts\python.exe" "%HIER%aufkleber_holen.py"
 powershell -NoProfile -ExecutionPolicy Bypass -File "%HIER%startmenue.ps1"
 
 echo.
