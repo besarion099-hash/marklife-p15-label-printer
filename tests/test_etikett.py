@@ -33,7 +33,7 @@ def test_datei_ist_lesbares_json_mit_fassung(tmp_path):
     et.speichern(_alle(), pfad)
     daten = json.loads(pfad.read_text(encoding="utf-8"))
     assert daten["fassung"] == 1
-    assert [e["art"] for e in daten["elemente"]] == ["text", "qr", "barcode", "bild", "rahmen", "linie"]
+    assert [e["typ"] for e in daten["elemente"]] == ["text", "qr", "barcode", "bild", "rahmen", "linie"]
 
 
 def test_neuere_fassung_wird_abgelehnt():
@@ -44,13 +44,13 @@ def test_neuere_fassung_wird_abgelehnt():
 def test_unbekannte_art():
     with pytest.raises(et.VorlagenFehler, match="Elementart"):
         et.aus_dict({"fassung": 1, "breite_mm": 30, "hoehe_mm": 15,
-                     "elemente": [{"art": "kreis"}]})
+                     "elemente": [{"typ": "kreis"}]})
 
 
 def test_kaputtes_bild():
     with pytest.raises(et.VorlagenFehler):
         et.aus_dict({"fassung": 1, "breite_mm": 30, "hoehe_mm": 15,
-                     "elemente": [{"art": "bild", "daten": "%%%"}]})
+                     "elemente": [{"typ": "bild", "daten": "%%%"}]})
 
 
 def test_keine_datei(tmp_path):
@@ -60,7 +60,7 @@ def test_keine_datei(tmp_path):
 
 def test_unerlaubte_drehung_wird_null():
     geladen = et.aus_dict({"fassung": 1, "breite_mm": 30, "hoehe_mm": 15,
-                           "elemente": [{"art": "linie", "drehung": 45}]})
+                           "elemente": [{"typ": "linie", "drehung": 45}]})
     assert geladen.elemente[0].drehung == 0
 
 

@@ -103,7 +103,7 @@ def ragt_ueber(etikett, element) -> bool:
 def zu_dict(etikett) -> dict:
     elemente = []
     for element in etikett.elemente:
-        eintrag = {"art": element.ART}
+        eintrag = {"typ": element.ART}
         for feld in fields(element):
             wert = getattr(element, feld.name)
             if isinstance(wert, bytes):
@@ -133,9 +133,9 @@ def aus_dict(daten) -> Etikett:
 
 
 def _element(eintrag: dict):
-    klasse = ARTEN.get(eintrag.get("art"))
+    klasse = ARTEN.get(eintrag.get("typ"))
     if klasse is None:
-        raise VorlagenFehler(f"Unbekannte Elementart: {eintrag.get('art')!r}")
+        raise VorlagenFehler(f"Unbekannte Elementart: {eintrag.get('typ')!r}")
     werte = {}
     for feld in fields(klasse):
         if feld.name in eintrag:
