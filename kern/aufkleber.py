@@ -81,6 +81,10 @@ ABWANDLUNGEN = {"off", "bolt", "cancel", "check", "code", "cog", "dollar", "down
                 "filled", "time", "upload", "download", "lock", "settings"}
 
 
+STOERTEILE = {"number", "discount", "percentage", "broken", "asterisk", "rate", "dollar",
+              "euro", "minus", "plus"}
+
+
 def _passt_zu(eintrag: dict, tabler_kategorien: set, woerter: set) -> bool:
     name = eintrag["name"]
     teile = name.split("-")
@@ -90,6 +94,10 @@ def _passt_zu(eintrag: dict, tabler_kategorien: set, woerter: set) -> bool:
         return False
     if eintrag.get("category") in tabler_kategorien:
         return True
+    # Zahlen-Rosetten, Rabatt- und Prozent-Zeichen gehoeren nicht in Motiv-Kategorien
+    # ("rosette-number-3" ist kein Geschenk, "heart-broken" kein Blumengruss).
+    if set(teile[1:]) & STOERTEILE:
+        return False
     # Stichwort muss das Motiv sein (erster Namensteil), nicht ein Zusatz:
     # "crown" ja, "basket-heart" nein.
     return teile[0] in woerter or any(name.startswith(w + "-") for w in woerter if "-" in w)
@@ -101,18 +109,22 @@ def tabler_katalog(ordner: Path) -> dict:
     if not metadaten.is_file():
         return {}
     eintraege = json.loads(metadaten.read_text(encoding="utf-8")).values()
-    katalog = {}
-    for name, tabler_kategorien, woerter in KATEGORIEN:
-        liste = []
-        for eintrag in eintraege:
-            pfad = ordner / "outline" / f"{eintrag['name']}.svg"
-            if "outline" in eintrag.get("styles", {}) and pfad.is_file() \
-                    and _passt_zu(eintrag, tabler_kategorien, woerter):
-                liste.append(Aufkleber(eintrag["name"], pfad,
-                                       tuple(str(t) for t in eintrag.get("tags", ()))))
-        if liste:
-            katalog[name] = sorted(liste, key=lambda a: a.name)
-    return katalog
+    # Den Ordner einmal auflisten statt jede Datei einzeln zu pruefen: 17
+    # Kategorien x 5203 Dateien kosteten unter Windows sonst ~26 s.
+    vorhanden = {pfad.stem: pfad for pfad in (ordner / "outline").glob("*.svg")}
+    katalog = {name: [] for name, _, _ in KATEGORIEN}
+    for eintrag in eintraege:
+        pfad = vorhanden.get(eintrag["name"])
+        if pfad is None or "outline" not in eintrag.get("styles", {}):
+            continue
+        aufkleber = None
+        for name, tabler_kategorien, woerter in KATEGORIEN:
+            if _passt_zu(eintrag, tabler_kategorien, woerter):
+                aufkleber = aufkleber or Aufkleber(
+                    eintrag["name"], pfad, tuple(str(t) for t in eintrag.get("tags", ())))
+                katalog[name].append(aufkleber)
+    return {name: sorted(liste, key=lambda a: a.name)
+            for name, liste in katalog.items() if liste}
 
 
 def ordner_katalog(ordner: Path, standardname: str) -> dict:
