@@ -55,3 +55,19 @@ def test_nichts_gewaehlt(qapp):
     leiste.zeige(Rahmen())
     leiste.zeige(None)
     assert leiste.felder == {} and leiste.element is None
+
+
+def test_stilauswahl_fuer_rahmen_und_linie(qapp):
+    from kern.etikett import Linie
+    leiste, gemeldet = _leiste()
+    rahmen = Rahmen()
+    leiste.zeige(rahmen)
+    feld = leiste.felder["stil"]
+    feld.setCurrentIndex(feld.findData("wellen"))
+    assert rahmen.stil == "wellen" and gemeldet
+    linie = Linie()
+    leiste.zeige(linie)
+    feld = leiste.felder["stil"]
+    assert feld.count() == 8
+    feld.setCurrentIndex(feld.findData("ornament"))
+    assert linie.stil == "ornament"

@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox, QFileDialog
 
 from gui.bilder import bild_lesen
 from kern.etikett import Barcode, Bild, Linie, QRCode, Rahmen, Text
+from kern.stile import LINIENSTILE, RAHMENSTILE
 from kern.zeichnen import SCHRIFTEN
 
 NAMEN = {Text: "Text", QRCode: "QR-Code", Barcode: "Barcode", Bild: "Bild",
@@ -83,10 +84,12 @@ class Eigenschaften(QWidget):
             knopf.clicked.connect(self._bild_waehlen)
             form.addRow(knopf)
         elif isinstance(element, Rahmen):
-            self._zahl(form, "strich_mm", "Strich (mm)", 0.125, 5)
+            self._auswahl(form, "stil", "Stil", RAHMENSTILE)
+            self._zahl(form, "strich_mm", "Strich (mm)", 0.25, 5)
             self._zahl(form, "ecken_mm", "Ecken (mm)", 0, 20)
         elif isinstance(element, Linie):
-            self._zahl(form, "strich_mm", "Strich (mm)", 0.125, 5)
+            self._auswahl(form, "stil", "Stil", LINIENSTILE)
+            self._zahl(form, "strich_mm", "Strich (mm)", 0.25, 5)
 
     def _setzen(self, name, wert):
         setattr(self.element, name, wert)

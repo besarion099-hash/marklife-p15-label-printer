@@ -75,12 +75,14 @@ class Rahmen(Element):
     ART: ClassVar[str] = "rahmen"
     strich_mm: float = 0.5
     ecken_mm: float = 0.0
+    stil: str = "einfach"           # siehe kern.stile.RAHMENSTILE
 
 
 @dataclass
 class Linie(Element):
     ART: ClassVar[str] = "linie"
     strich_mm: float = 0.5
+    stil: str = "durchgezogen"      # siehe kern.stile.LINIENSTILE
 
 
 ARTEN = {klasse.ART: klasse for klasse in (Text, QRCode, Barcode, Bild, Rahmen, Linie)}

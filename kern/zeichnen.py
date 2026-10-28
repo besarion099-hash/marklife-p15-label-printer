@@ -13,7 +13,7 @@ import io
 
 from PIL import Image, ImageChops, ImageDraw, ImageFont, ImageOps
 
-from kern import codes, platzhalter
+from kern import codes, platzhalter, stile
 from kern.etikett import Barcode, Bild, Linie, QRCode, Rahmen, Text
 
 PUNKTE_JE_MM = 8
@@ -85,15 +85,12 @@ def _inhalt(element, breite, hoehe, werte):
         return _bild(element, breite, hoehe)
     if isinstance(element, Rahmen):
         flaeche = Image.new("L", (breite, hoehe), 255)
-        ImageDraw.Draw(flaeche).rounded_rectangle(
-            [0, 0, breite - 1, hoehe - 1], radius=punkte(element.ecken_mm),
-            outline=0, width=max(1, punkte(element.strich_mm)))
+        stile.rahmen(ImageDraw.Draw(flaeche), breite, hoehe, punkte(element.strich_mm),
+                     punkte(element.ecken_mm), element.stil)
         return flaeche
     if isinstance(element, Linie):
         flaeche = Image.new("L", (breite, hoehe), 255)
-        staerke = min(hoehe, max(1, punkte(element.strich_mm)))
-        oben = (hoehe - staerke) // 2
-        ImageDraw.Draw(flaeche).rectangle([0, oben, breite - 1, oben + staerke - 1], fill=0)
+        stile.linie(ImageDraw.Draw(flaeche), breite, hoehe, punkte(element.strich_mm), element.stil)
         return flaeche
     return None
 
