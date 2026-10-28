@@ -24,7 +24,10 @@ echo Erstelle venv ...
 "%HIER%venv\Scripts\python.exe" -m pip install --upgrade pip
 "%HIER%venv\Scripts\python.exe" -m pip install -r "%HIER%requirements.txt"
 
+powershell -NoProfile -ExecutionPolicy Bypass -File "%HIER%startmenue.ps1"
+
 echo.
-echo Fertig. Starte das Programm mit "Etikettendrucker.bat".
+echo Fertig. Starte das Programm ueber das Startmenue ("Etikettendrucker")
+echo oder mit "Etikettendrucker.bat".
 echo.
 pause

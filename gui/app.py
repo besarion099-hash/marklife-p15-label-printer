@@ -13,6 +13,26 @@ if str(WURZEL) not in sys.path:
 LOG = WURZEL / "lauf.log"
 
 
+def venv_einbinden():
+    """Pakete der venv auch dann finden, wenn die Basis-Python startet.
+
+    Der Startmenue-Eintrag startet direkt die Basis-Python statt
+    venv\\Scripts\\python.exe. Der venv-Starter ist unter Windows nur ein
+    Weiterleiter, der einen zweiten Prozess erzeugt; dann gehoert das
+    Fenster einem anderen Prozess, und die Konsole laesst sich nicht
+    ausblenden, weil zwei Prozesse an ihr haengen.
+    """
+    if sys.prefix != sys.base_prefix:
+        return                                    # laeuft schon in der venv
+    pakete = WURZEL / "venv" / "Lib" / "site-packages"
+    if pakete.is_dir():
+        import site
+        site.addsitedir(str(pakete))
+
+
+venv_einbinden()
+
+
 def konsole_verstecken():
     """Das schwarze Konsolenfenster ausblenden (nur Windows).
 
