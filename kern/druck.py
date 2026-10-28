@@ -25,15 +25,29 @@ class DruckFehler(Exception):
         self.fertig = fertig
 
 
-def druckbild(etikett, werte, drehung_grad: int):
+def druckbild(etikett, werte, drehung_grad: int, versatz_mm: float = 0.0):
     fehler = []
     bild = zeichnen.zeichnen(etikett, werte, fehler)
     if fehler:
         index, meldung = fehler[0]
         raise DruckFehler(f"Element {index + 1}: {meldung}")
+    bild = verschieben(bild, round(versatz_mm * zeichnen.PUNKTE_JE_MM))
     if drehung_grad in _IM_UHRZEIGERSINN:
         bild = bild.transpose(_IM_UHRZEIGERSINN[drehung_grad])
     return auf_kopfbreite(bild)
+
+
+def verschieben(bild, punkte: int):
+    """Das Etikettbild waagerecht verschieben (negativ = nach links), Rest weiss.
+
+    Der P15 setzt den Druck etwa 1,5 mm zu weit nach rechts (am Geraet am
+    28.10.2026 gemessen); die Einstellung versatz_mm gleicht das aus.
+    """
+    if punkte == 0:
+        return bild
+    neu = Image.new(bild.mode, bild.size, 255)
+    neu.paste(bild, (punkte, 0))
+    return neu
 
 
 def auf_kopfbreite(bild):
@@ -56,7 +70,7 @@ def auf_kopfbreite(bild):
 
 
 def auftrag_fuer(etikett, werte, einstellungen) -> bytes:
-    bild = druckbild(etikett, werte, einstellungen.drehung_grad)
+    bild = druckbild(etikett, werte, einstellungen.drehung_grad, einstellungen.versatz_mm)
     try:
         return protokoll.auftrag(bild, einstellungen.papiertyp, einstellungen.dichte)
     except ValueError as fehler:

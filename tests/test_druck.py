@@ -89,3 +89,12 @@ def test_ausrichtung_zwei_etiketten():
     assert druck.ausrichtung_testen(E, 30, 15, verbindung) == 2
     assert verbindung.gesendet[0] != verbindung.gesendet[1]
     assert [daten[19] for daten in verbindung.gesendet] == [14, 14]   # 112 Punkte
+
+
+def test_versatz_schiebt_nach_links():
+    etikett = Etikett(4, 2, [Rahmen(x_mm=2, y_mm=0, breite_mm=1, hoehe_mm=2, strich_mm=1)])
+    bild = druck.druckbild(etikett, None, 0, versatz_mm=-1.5)    # 12 Punkte nach links
+    assert bild.width == 112                                     # aufgefuellt, Versatz 40
+    assert bild.getpixel((40 + 4, 8)) == 0                       # vorher x 16..23
+    assert bild.getpixel((40 + 16, 8)) == 255
+    assert bild.getpixel((40 + 30, 8)) == 255                    # rechts weiss nachgefuellt
