@@ -26,13 +26,13 @@ _MINDESTENS = {"blockgroesse": 1, "pause_ms": 0}
 @dataclass
 class Einstellungen:
     port: str = ""
-    groesse: str = "30 x 15 mm"
+    groesse: str = "40 x 12 mm"   # Rolle des Nutzers (P15)
     eigene_breite_mm: float = 40.0
     eigene_hoehe_mm: float = 12.0
     papiertyp: int = 2          # 1 Endlos, 2 Etikett mit Luecke, 3 schwarze Marke
     dichte: int = 2             # 1 hell, 2 normal, 3 dunkel
     drehung_grad: int = 270     # im Uhrzeigersinn vor dem Senden; am P15 bestaetigt
-    versatz_mm: float = -3.5    # Druck entlang des Etiketts verschieben; am P15 gemessen
+    versatz_mm: float = 0.0     # Feinkorrektur entlang des Etiketts (negativ = nach links)
     blockgroesse: int = 512
     pause_ms: int = 20
     letzter_ordner: str = ""
