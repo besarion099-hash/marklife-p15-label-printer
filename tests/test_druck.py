@@ -40,7 +40,7 @@ def test_zwoelf_mm_band_wird_mittig_aufgefuellt():
 def test_auftrag_fuer_etikett():
     daten = druck.auftrag_fuer(Etikett(30, 15), None, E)
     assert daten[:8] == bytes.fromhex("10FFF102 1F70010A")
-    assert daten[15:23] == bytes([0x1D, 0x76, 0x30, 0x00, 14, 0, 271 & 0xFF, 1])   # 240 + 31 Vorlauf
+    assert daten[15:23] == bytes([0x1D, 0x76, 0x30, 0x00, 14, 0, 0xF0, 0])
     assert daten.endswith(bytes.fromhex("1D0C 1F1150 10FFF145"))
 
 

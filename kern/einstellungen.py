@@ -32,7 +32,7 @@ class Einstellungen:
     papiertyp: int = 2          # 1 Endlos, 2 Etikett mit Luecke, 3 schwarze Marke
     dichte: int = 2             # 1 hell, 2 normal, 3 dunkel
     drehung_grad: int = 270     # im Uhrzeigersinn vor dem Senden; am P15 bestaetigt
-    versatz_mm: float = 3.9     # weisser Vorlauf vor dem Etikett; P15 druckt 3,9 mm zu frueh
+    versatz_mm: float = 0.0     # Vorlauf (+) oder vorne kuerzen (-); am P15 ohne Wirkung gegen den 3,9-mm-Rand
     blockgroesse: int = 512
     pause_ms: int = 20
     letzter_ordner: str = ""
