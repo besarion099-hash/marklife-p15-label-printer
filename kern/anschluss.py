@@ -15,6 +15,9 @@ import time
 from dataclasses import dataclass
 
 _MAC = re.compile(r"&([0-9A-Fa-f]{12})_")
+# Geraetenamen der Marklife-/YXQ-Drucker (P15_ZF39F, P12_..., S15...). Solche Ports
+# stehen ganz vorn, damit die Vorauswahl nicht auf einem Kopfhoerer landet.
+_DRUCKERNAME = re.compile(r"^(P\d|S\d|L1\d|D\d{2,3}|X\d|U\d|Marklife)", re.IGNORECASE)
 _GERAETE = r"SYSTEM\CurrentControlSet\Services\BTHPORT\Parameters\Devices"
 
 
@@ -64,7 +67,8 @@ def ports(auflisten=None, namen=bluetooth_name) -> list[Port]:
             gefunden.append(Port(eintrag.device, f"{name} ({eintrag.device})", True))
         else:
             gefunden.append(Port(eintrag.device, eintrag.description or eintrag.device, False))
-    gefunden.sort(key=lambda p: (not p.bluetooth, p.beschreibung.lower()))
+    gefunden.sort(key=lambda p: (not _DRUCKERNAME.match(p.beschreibung), not p.bluetooth,
+                                 p.beschreibung.lower()))
     return gefunden
 
 

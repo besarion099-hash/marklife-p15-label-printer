@@ -1,0 +1,39 @@
+Etikettendrucker für den Marklife P15
+=====================================
+
+Einrichten (einmalig)
+  1. install.bat doppelklicken. Lädt etwa 150 MB und dauert ein paar Minuten.
+  2. Den Drucker einschalten und in Windows koppeln:
+     Einstellungen > Bluetooth und Geräte > Gerät hinzufügen > P15_...
+     (nicht den Eintrag mit _BLE am Ende).
+  3. Starten mit Etikettendrucker.bat.
+
+Vor dem ersten Druck
+  Menü Drucker > Ausrichtung testen. Es kommen vier Etiketten heraus.
+  Das Etikett nehmen, auf dem der Pfeil nach oben zeigt und der Text
+  lesbar ist, und dessen Gradzahl auswählen. Das Programm merkt sie sich.
+
+Ein Etikett gestalten
+  Oben Größe, Papier und Dichte wählen. Links ein Werkzeug anklicken.
+  Elemente mit der Maus ziehen; das kleine Quadrat unten rechts ändert
+  die Größe. Rechts stehen die Felder des gewählten Elements.
+  Entf löscht das gewählte Element.
+
+  Rahmenfarben: blau = gewählt, orange = ragt über den Rand und wird
+  abgeschnitten, rot = lässt sich nicht drucken (z. B. QR-Code zu klein).
+
+Serien-Druck
+  In Text, QR-Code oder Barcode {{Spaltenname}} schreiben, zum Beispiel
+  {{Name}}. Dann Datei > Serien-Druck, Tabelle wählen (CSV oder Excel,
+  erste Zeile = Spaltennamen). Rot markierte Zeilen heißen: Ein
+  Platzhalter hat keine passende Spalte.
+
+Wenn es nicht druckt
+  - "Kein Drucker gefunden": Drucker einschalten, koppeln, dann
+    Drucker > Drucker neu suchen.
+  - "Port lässt sich nicht öffnen": Ein anderes Programm (z. B. die
+    Windows-Druckerwarteschlange) benutzt den Port gerade. Kurz warten
+    oder das andere Programm schließen.
+  - Der Ausdruck ist zerhackt oder bricht ab: In einstellungen.json
+    "blockgroesse" auf 128 und "pause_ms" auf 50 setzen.
+  - Unerwartete Fehler stehen in lauf.log.

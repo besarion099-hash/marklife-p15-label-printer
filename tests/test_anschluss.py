@@ -31,6 +31,16 @@ def test_ports_sortiert_und_benannt():
     assert gefunden[0].bluetooth and not gefunden[1].bluetooth
 
 
+def test_drucker_steht_vor_kopfhoerern():
+    jbl = (r"BTHENUM\{00001101-0000-1000-8000-00805F9B34FB}_VID&000102B0_PID&0000"
+           r"\7&2C9806C5&0&08EBEDB9543F_C00000000")
+    liste = [SimpleNamespace(device="COM4", description="Seriell", hwid=jbl),
+             SimpleNamespace(device="COM13", description="Seriell", hwid=P15)]
+    namen = {"08ebedb9543f": "JBL WAVE BEAM", "55550906f39f": "P15_ZF39F"}
+    gefunden = anschluss.ports(lambda: liste, namen.get)
+    assert [p.name for p in gefunden] == ["COM13", "COM4"]
+
+
 def test_ports_ohne_registry_name():
     liste = [SimpleNamespace(device="COM13", description="Seriell über Bluetooth", hwid=P15)]
     gefunden = anschluss.ports(lambda: liste, lambda mac: None)

@@ -60,6 +60,7 @@ class Hauptfenster(QMainWindow):
         rechts = QScrollArea()
         rechts.setWidget(self.eigenschaften)
         rechts.setWidgetResizable(True)
+        rechts.setMinimumWidth(300)
         teiler = QSplitter()
         teiler.addWidget(self.flaeche)
         teiler.addWidget(rechts)
