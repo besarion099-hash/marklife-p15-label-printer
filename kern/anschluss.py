@@ -95,11 +95,17 @@ class Verbindung:
         self._port = None
 
     def __enter__(self):
+        # Nach einer Pause scheitert der erste Verbindungsaufbau zum P15
+        # regelmaessig ("Zeitlimit fuer die Semaphore"), der zweite klappt.
         try:
             self._port = self._oeffnen(self.portname)
-        except OSError as fehler:
-            raise AnschlussFehler(
-                f"Der Port {self.portname} lässt sich nicht öffnen: {fehler}") from fehler
+        except OSError:
+            self._schlafen(1.0)
+            try:
+                self._port = self._oeffnen(self.portname)
+            except OSError as fehler:
+                raise AnschlussFehler(
+                    f"Der Port {self.portname} lässt sich nicht öffnen: {fehler}") from fehler
         return self
 
     def schreiben(self, daten: bytes, blockgroesse: int = 512, pause_ms: int = 20,

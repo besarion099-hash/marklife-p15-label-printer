@@ -86,6 +86,20 @@ def test_oeffnen_scheitert():
             pass
 
 
+def test_zweiter_versuch_beim_oeffnen():
+    versuche = []
+
+    def erst_beim_zweiten(name):
+        versuche.append(name)
+        if len(versuche) == 1:
+            raise OSError("Das Zeitlimit für die Semaphore wurde erreicht")
+        return FalscherPort()
+
+    with anschluss.Verbindung("COM13", erst_beim_zweiten, schlafen=lambda s: None):
+        pass
+    assert len(versuche) == 2
+
+
 def test_abriss_beim_schreiben_schliesst_port():
     port = FalscherPort(kaputt_ab=1)
     with pytest.raises(anschluss.AnschlussFehler, match="abgerissen"):
