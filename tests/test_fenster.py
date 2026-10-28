@@ -39,7 +39,7 @@ def test_drucken_sendet_ein_etikett(qapp, tmp_path):
     warten(qapp, lambda: not fenster._faden.isRunning())
     assert verbindung.port == "COM13"
     assert len(verbindung.gesendet) == 1
-    assert verbindung.gesendet[0][:4] == bytes([0x1F, 0x70, 0x02, 0x06])
+    assert verbindung.gesendet[0][:8] == bytes.fromhex("10FFF102 1F70010A")
     assert (tmp_path / "e.json").exists()
 
 

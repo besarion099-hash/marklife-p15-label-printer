@@ -14,7 +14,7 @@ from PIL import Image
 from kern import anschluss, protokoll, zeichnen
 from kern.etikett import Etikett, Rahmen, Text
 
-TESTDREHUNGEN = (0, 90, 180, 270)
+TESTDREHUNGEN = (90, 270)      # der P15 druckt hochkant; 270 ist am Geraet bestaetigt
 _IM_UHRZEIGERSINN = {90: Image.Transpose.ROTATE_270, 180: Image.Transpose.ROTATE_180,
                      270: Image.Transpose.ROTATE_90}
 
@@ -33,6 +33,11 @@ def druckbild(etikett, werte, drehung_grad: int):
         raise DruckFehler(f"Element {index + 1}: {meldung}")
     if drehung_grad in _IM_UHRZEIGERSINN:
         bild = bild.transpose(_IM_UHRZEIGERSINN[drehung_grad])
+    if bild.width > protokoll.KOPF_PUNKTE:
+        # Breiter als der Druckkopf: mittig beschneiden, wie der Windows-Treiber
+        # (30 x 15 mm -> 120 Punkte Bandbreite, gesendet werden 112).
+        rand = (bild.width - protokoll.KOPF_PUNKTE) // 2
+        bild = bild.crop((rand, 0, rand + protokoll.KOPF_PUNKTE, bild.height))
     return bild
 
 

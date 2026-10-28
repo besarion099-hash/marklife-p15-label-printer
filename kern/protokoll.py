@@ -1,22 +1,25 @@
 # -*- coding: utf-8 -*-
 """Druckauftrag fuer den Marklife P15 als Bytes.
 
-Gelesen aus der Marklife-App V3.9.1 (Paket com.feioou.deliprint.yxq):
-P15Protocol.getData baut den Auftrag, die Bausteine kommen aus
-BaseProtocol (jeweils der Zweig fuer getProtocol() == 6), das Raster aus
-Printer_ESC.printBitmap. Einzelheiten im Entwurf
-docs/superpowers/specs/2026-10-28-etikettendrucker-p15-design.md
+Der Ablauf stammt aus einem Mitschnitt des Windows-Treibers (P15UNI.DLL,
+am 28.10.2026 per Datei-Port aufgezeichnet) und ist am Geraet bestaetigt:
+damit gedruckte Etiketten kamen lesbar heraus. Die Klasse P15Protocol der
+Android-App sendet einen anderen Ablauf (1F 70 02 d, 15 Nullbytes, Bild
+120 Punkte breit); der kam am P15 nicht an.
+
+Annahmen, noch nicht am Geraet geprueft: die Dichte-Werte ausser 0x0A
+und der Nachschub fuer Endlospapier und schwarze Marke.
 """
 
 from __future__ import annotations
 
-DICHTE_BYTE = {1: 0x02, 2: 0x06, 3: 0x0A}
+KOPF_PUNKTE = 112                    # Breite des Druckkopfs (14 mm bei 203 dpi)
+DICHTE_BYTE = {1: 0x06, 2: 0x0A, 3: 0x0E}   # 0x0A sendet der Treiber als Vorgabe
 NACHSCHUB = {
     1: bytes([0x1B, 0x4A, 0x64]),   # Endlospapier: 100 Punkte vor (ESC J)
     2: bytes([0x1D, 0x0C]),         # Etikett mit Luecke: zum naechsten Etikett
     3: b"",                         # schwarze Marke: nichts
 }
-AUFWECKEN = bytes(15)
 DRUCKER_AN = bytes([0x10, 0xFF, 0xF1, 0x02])
 ENDE = bytes([0x10, 0xFF, 0xF1, 0x45])
 
@@ -49,11 +52,17 @@ def auftrag(bild, papiertyp: int, dichte: int) -> bytes:
         raise ValueError(f"Unbekannter Papiertyp: {papiertyp}")
     if dichte not in DICHTE_BYTE:
         raise ValueError(f"Unbekannte Dichte: {dichte}")
+    # Der Treiber springt auch VOR dem Bild mit 1D 0C zum naechsten Etikett.
+    # Am Geraet kostete das ein leeres Etikett je Druck; deshalb nur danach.
     return b"".join([
-        bytes([0x1F, 0x70, 0x02, DICHTE_BYTE[dichte]]),
-        AUFWECKEN,
         DRUCKER_AN,
+        bytes([0x1F, 0x70, 0x01, DICHTE_BYTE[dichte]]),
+        bytes([0x1F, 0x11, 0x51]),
+        bytes([0x1F, 0xC0, 0x01, 0x00]),
         bildbefehl(bild),
+        bytes([0x0D, 0x0A]),
+        bytes([0x1F, 0xC0, 0x01, 0x01]),
         NACHSCHUB[papiertyp],
+        bytes([0x1F, 0x11, 0x50]),
         ENDE,
     ])

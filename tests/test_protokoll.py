@@ -41,18 +41,22 @@ def test_kopf_mit_grossen_massen():
     assert kopf == bytes([0x1D, 0x76, 0x30, 0x00, 38, 0x00, 0x2C, 0x01])
 
 
-@pytest.mark.parametrize("papiertyp, nachschub",
-                         [(1, b"\x1b\x4a\x64"), (2, b"\x1d\x0c"), (3, b"")])
-@pytest.mark.parametrize("dichte, d", [(1, 0x02), (2, 0x06), (3, 0x0A)])
-def test_auftrag_ganz(papiertyp, nachschub, dichte, d):
-    erwartet = (bytes([0x1F, 0x70, 0x02, d])
-                + bytes(15)
-                + bytes([0x10, 0xFF, 0xF1, 0x02])
+def test_auftrag_wie_der_windows_treiber():
+    # Rahmen aus dem Mitschnitt des Treibers, ohne dessen 1D 0C vor dem Bild.
+    erwartet = (bytes.fromhex("10FFF102 1F70010A 1F1151 1FC00100")
                 + bytes([0x1D, 0x76, 0x30, 0x00, 0x02, 0x00, 0x02, 0x00,
                          0xFF, 0x00, 0xAA, 0xAA])
-                + nachschub
-                + bytes([0x10, 0xFF, 0xF1, 0x45]))
-    assert protokoll.auftrag(_muster(), papiertyp, dichte) == erwartet
+                + bytes.fromhex("0D0A 1FC00101 1D0C 1F1150 10FFF145"))
+    assert protokoll.auftrag(_muster(), 2, 2) == erwartet
+
+
+@pytest.mark.parametrize("papiertyp, nachschub",
+                         [(1, b"\x1b\x4a\x64"), (2, b"\x1d\x0c"), (3, b"")])
+@pytest.mark.parametrize("dichte, d", [(1, 0x06), (2, 0x0A), (3, 0x0E)])
+def test_auftrag_varianten(papiertyp, nachschub, dichte, d):
+    daten = protokoll.auftrag(_muster(), papiertyp, dichte)
+    assert daten[4:8] == bytes([0x1F, 0x70, 0x01, d])
+    assert daten.endswith(nachschub + bytes.fromhex("1F1150 10FFF145"))
 
 
 def test_unbekannte_werte():
