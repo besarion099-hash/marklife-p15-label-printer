@@ -38,15 +38,18 @@ def druckbild(etikett, werte, drehung_grad: int, versatz_mm: float = 0.0):
 
 
 def verschieben(bild, punkte: int):
-    """Das Etikettbild waagerecht verschieben (negativ = nach links), Rest weiss.
+    """Vorlauf vor dem Etikettbild: positiv = weiss davor, negativ = vorne kuerzen.
 
-    Feinkorrektur, falls ein Drucker den Druck versetzt ansetzt. Achtung:
-    Was dabei ueber den Rand rutscht, wird abgeschnitten. (Der vermeintliche
-    Versatz am P15 am 28.10.2026 war ein 30-mm-Bild auf einem 40-mm-Etikett.)
+    Der P15 beginnt rund 3,9 mm VOR dem Etikett zu drucken (Lineal-Etikett
+    am 28.10.2026). Ohne Vorlauf fehlen links 3,9 mm, rechts bleiben 3,9 mm
+    leer. Mit weissem Vorlauf wird das Bild laenger statt beschnitten, und
+    das Etikett landet vollstaendig auf dem Papier.
     """
     if punkte == 0:
         return bild
-    neu = Image.new(bild.mode, bild.size, 255)
+    if punkte < 0:
+        return bild.crop((-punkte, 0, bild.width, bild.height))
+    neu = Image.new(bild.mode, (bild.width + punkte, bild.height), 255)
     neu.paste(bild, (punkte, 0))
     return neu
 

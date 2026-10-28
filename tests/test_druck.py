@@ -40,7 +40,7 @@ def test_zwoelf_mm_band_wird_mittig_aufgefuellt():
 def test_auftrag_fuer_etikett():
     daten = druck.auftrag_fuer(Etikett(30, 15), None, E)
     assert daten[:8] == bytes.fromhex("10FFF102 1F70010A")
-    assert daten[15:23] == bytes([0x1D, 0x76, 0x30, 0x00, 14, 0, 0xF0, 0])
+    assert daten[15:23] == bytes([0x1D, 0x76, 0x30, 0x00, 14, 0, 271 & 0xFF, 1])   # 240 + 31 Vorlauf
     assert daten.endswith(bytes.fromhex("1D0C 1F1150 10FFF145"))
 
 
@@ -91,10 +91,23 @@ def test_ausrichtung_zwei_etiketten():
     assert [daten[19] for daten in verbindung.gesendet] == [14, 14]   # 112 Punkte
 
 
-def test_versatz_schiebt_nach_links():
+def test_vorlauf_haengt_weiss_vorne_an():
+    etikett = Etikett(4, 2, [Rahmen(x_mm=0, y_mm=0, breite_mm=1, hoehe_mm=2, strich_mm=1)])
+    bild = druck.druckbild(etikett, None, 0, versatz_mm=1.5)     # 12 Punkte Vorlauf
+    assert bild.size == (112, 16)                                # 32 + 12 = 44 breit, aufgefuellt
+    links = (112 - 44) // 2
+    assert bild.getpixel((links + 5, 8)) == 255                  # Vorlauf ist weiss
+    assert bild.getpixel((links + 12 + 4, 8)) == 0               # Inhalt komplett dahinter
+
+
+def test_negativer_versatz_kuerzt_vorne():
     etikett = Etikett(4, 2, [Rahmen(x_mm=2, y_mm=0, breite_mm=1, hoehe_mm=2, strich_mm=1)])
-    bild = druck.druckbild(etikett, None, 0, versatz_mm=-1.5)    # 12 Punkte nach links
-    assert bild.width == 112                                     # aufgefuellt, Versatz 40
-    assert bild.getpixel((40 + 4, 8)) == 0                       # vorher x 16..23
-    assert bild.getpixel((40 + 16, 8)) == 255
-    assert bild.getpixel((40 + 30, 8)) == 255                    # rechts weiss nachgefuellt
+    bild = druck.druckbild(etikett, None, 0, versatz_mm=-1.5)
+    assert bild.size == (112, 16)                                # 32 - 12 = 20 breit
+    links = (112 - 20) // 2
+    assert bild.getpixel((links + 4, 8)) == 0                    # vorher x 16..23
+
+
+def test_vorlauf_bei_gedrehtem_druck():
+    bild = druck.druckbild(Etikett(40, 12), None, 270, versatz_mm=3.9)
+    assert bild.size == (112, 320 + 31)                          # 3,9 mm = 31 Punkte mehr
