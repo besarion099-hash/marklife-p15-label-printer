@@ -73,18 +73,8 @@ def ports(auflisten=None, namen=bluetooth_name) -> list[Port]:
 
 
 def _serial_oeffnen(portname):
-    """Den Port als rohe Datei oeffnen.
-
-    Virtuelle Bluetooth-Ports lehnen das Setzen von Baudrate und
-    Steuerleitungen ab (pyserial: "Cannot configure port ... Unzulaessige
-    Funktion", am P15 am 28.10.2026 beobachtet). Sie brauchen es auch
-    nicht. Nur wenn das rohe Oeffnen scheitert, kommt pyserial zum Zug.
-    """
-    try:
-        return open(rf"\\.\{portname}", "r+b", buffering=0)
-    except OSError:
-        import serial
-        return serial.Serial(portname, baudrate=115200, timeout=2, write_timeout=10)
+    import serial
+    return serial.Serial(portname, baudrate=115200, timeout=2, write_timeout=10)
 
 
 class Verbindung:
