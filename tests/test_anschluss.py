@@ -106,3 +106,29 @@ def test_abriss_beim_schreiben_schliesst_port():
         with anschluss.Verbindung("COM13", lambda name: port, schlafen=lambda s: None) as v:
             v.schreiben(bytes(1000), blockgroesse=512)
     assert port.zu
+
+
+def test_mindestabstand_zwischen_verbindungen():
+    anschluss.Verbindung._zuletzt_geschlossen.clear()
+    jetzt = [100.0]
+    pausen = []
+
+    def schlafen(s):
+        pausen.append(s)
+        jetzt[0] += s
+
+    def neu():
+        return anschluss.Verbindung("COM99", lambda n: FalscherPort(), nachlauf_s=0,
+                                    schlafen=schlafen, uhr=lambda: jetzt[0])
+
+    with neu():
+        pass
+    assert pausen == [0]                       # erstes Oeffnen ohne Warten (nur Nachlauf 0)
+    jetzt[0] += 2.0                            # 2 s spaeter neu drucken
+    with neu():
+        pass
+    assert pausen[1] == 3.0                    # auf 5 s aufgefuellt
+    jetzt[0] += 10.0                           # lange Pause: kein Warten
+    with neu():
+        pass
+    assert len(pausen) == 4 and pausen[3] == 0

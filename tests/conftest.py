@@ -15,3 +15,12 @@ def qapp():
     from PySide6.QtWidgets import QApplication
     app = QApplication.instance() or QApplication([])
     yield app
+
+
+@pytest.fixture(autouse=True)
+def frische_verbindungszeit():
+    """Jeder Test startet ohne Zeitmarke eines vorher geschlossenen Ports."""
+    from kern.anschluss import Verbindung
+    Verbindung._zuletzt_geschlossen.clear()
+    yield
+    Verbindung._zuletzt_geschlossen.clear()

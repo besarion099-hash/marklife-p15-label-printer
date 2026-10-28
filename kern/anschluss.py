@@ -86,15 +86,28 @@ class Verbindung:
     serial.SerialException erbt von OSError; deshalb genuegt OSError.
     """
 
+    # Wird ein Port kurz nach dem Schliessen wieder geoeffnet, bricht das
+    # Schreiben am P15 mit "Write timeout" ab (28.10.2026: nach 1 s Pause
+    # gescheitert, nach 5 s Pause gelungen). Deshalb gilt je Port ein
+    # Mindestabstand vom letzten Schliessen bis zum naechsten Oeffnen.
+    MINDESTABSTAND_S = 5.0
+    _zuletzt_geschlossen: dict = {}
+
     def __init__(self, portname: str, oeffnen=_serial_oeffnen,
-                 nachlauf_s: float = 1.0, schlafen=time.sleep):
+                 nachlauf_s: float = 1.0, schlafen=time.sleep, uhr=time.monotonic):
         self.portname = portname
         self._oeffnen = oeffnen
         self._nachlauf_s = nachlauf_s
         self._schlafen = schlafen
+        self._uhr = uhr
         self._port = None
 
     def __enter__(self):
+        zuletzt = Verbindung._zuletzt_geschlossen.get(self.portname)
+        if zuletzt is not None:
+            rest = self.MINDESTABSTAND_S - (self._uhr() - zuletzt)
+            if rest > 0:
+                self._schlafen(rest)
         # Nach einer Pause scheitert der erste Verbindungsaufbau zum P15
         # regelmaessig ("Zeitlimit fuer die Semaphore"), der zweite klappt.
         try:
@@ -132,4 +145,5 @@ class Verbindung:
                 self._port.close()
             except OSError:
                 pass
+            Verbindung._zuletzt_geschlossen[self.portname] = self._uhr()
         return False
