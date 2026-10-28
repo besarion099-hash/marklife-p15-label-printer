@@ -63,3 +63,10 @@ def test_abriss_setzt_von_zum_weitermachen(qapp, tmp_path):
     warten(qapp, lambda: not dialog._faden.isRunning())
     assert dialog.von.value() == 2
     assert "abgerissen" in dialog.meldungen[0]
+
+
+def test_zeilenfelder_erst_nach_dem_laden(qapp, tmp_path):
+    dialog = _dialog()
+    assert not dialog.von.isEnabled() and not dialog.bis.isEnabled()
+    dialog.lade(_csv(tmp_path))
+    assert dialog.von.isEnabled() and dialog.bis.isEnabled()

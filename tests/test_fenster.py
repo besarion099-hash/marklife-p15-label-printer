@@ -77,3 +77,23 @@ def test_neue_elemente_bleiben_im_bedruckbaren_teil(qapp, tmp_path):
     for art in ("text", "barcode", "rahmen", "linie"):
         fenster.neues_element(art)
     assert not any(fenster.flaeche.ausserhalb(e) for e in fenster.etikett.elemente)
+
+
+def test_text_und_qr_ueberlappen_nicht(qapp, tmp_path):
+    fenster = _fenster(tmp_path)
+    fenster.leiste.groesse.setCurrentText("40 x 12 mm")
+    fenster.neues_element("text")
+    fenster.neues_element("qr")
+    text, qr = fenster.etikett.elemente
+    text.breite_mm = qr.x_mm - 2                     # Text links daneben
+    assert qr.x_mm + qr.breite_mm <= 40 - fenster.e.rand_ende_mm
+    assert not fenster.flaeche.ausserhalb(qr)
+
+
+def test_startordner_ist_dokumente_ohne_letzten_ordner(tmp_path):
+    from pathlib import Path
+    from gui.bilder import startordner
+    from kern.einstellungen import Einstellungen
+    assert startordner(Einstellungen()) == str(Path.home() / "Documents")
+    assert startordner(Einstellungen(letzter_ordner=str(tmp_path))) == str(tmp_path)
+    assert startordner(Einstellungen(letzter_ordner=str(tmp_path / "weg"))) == str(Path.home() / "Documents")

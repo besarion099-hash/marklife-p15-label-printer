@@ -8,6 +8,7 @@ aufgelegt; so loescht kein Element ein anderes, das unter ihm liegt.
 
 from __future__ import annotations
 
+import functools
 import io
 
 from PIL import Image, ImageChops, ImageDraw, ImageFont, ImageOps
@@ -97,6 +98,7 @@ def _inhalt(element, breite, hoehe, werte):
     return None
 
 
+@functools.lru_cache(maxsize=256)
 def schrift(name: str, fett: bool, px: int):
     normal, dick = SCHRIFTEN.get(name, SCHRIFTEN["Arial"])
     for datei in ((dick, normal) if fett else (normal,)):
@@ -111,14 +113,33 @@ def _text(element, breite, hoehe, inhalt):
     flaeche = Image.new("L", (breite, hoehe), 255)
     if not inhalt.strip():
         return flaeche
-    px = max(4, round(element.groesse_pt * 203 / 72))
-    font = schrift(element.schrift, element.fett, px)
     zeichner = ImageDraw.Draw(flaeche)
     ausrichtung = _AUSRICHTUNG.get(element.ausrichtung, "left")
-    links, oben, rechts, unten = zeichner.multiline_textbbox((0, 0), inhalt, font=font,
-                                                             align=ausrichtung)
+    # Die eingestellte Groesse ist ein Hoechstwert: Passt der Text nicht ins
+    # Feld, wird er verkleinert, statt still Buchstaben abzuschneiden (beim
+    # Serien-Druck mit langen Werten sonst leicht zu uebersehen).
+    def masse(px):
+        font = schrift(element.schrift, element.fett, px)
+        kasten = zeichner.multiline_textbbox((0, 0), inhalt, font=font, align=ausrichtung)
+        return font, kasten
+
+    def passt(kasten):
+        return kasten[2] - kasten[0] <= breite and kasten[3] - kasten[1] <= hoehe
+
+    groesste = max(4, round(element.groesse_pt * 203 / 72))
+    font, kasten = masse(groesste)
+    if not passt(kasten):
+        klein, gross = 4, groesste             # binaere Suche: groesste passende Groesse
+        while gross - klein > 1:
+            mitte = (klein + gross) // 2
+            if passt(masse(mitte)[1]):
+                klein = mitte
+            else:
+                gross = mitte
+        font, kasten = masse(klein)
+    links, oben, rechts, unten = kasten
     text_b, text_h = rechts - links, unten - oben
-    x = {"left": 0, "center": (breite - text_b) // 2, "right": breite - text_b}[ausrichtung]
+    x ={"left": 0, "center": (breite - text_b) // 2, "right": breite - text_b}[ausrichtung]
     y = (hoehe - text_h) // 2
     zeichner.multiline_text((x - links, y - oben), inhalt, font=font, fill=0, align=ausrichtung)
     return flaeche

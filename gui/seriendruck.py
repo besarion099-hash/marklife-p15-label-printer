@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QDialog, QFileDialog, QGridLay
                                QTableWidget, QTableWidgetItem, QVBoxLayout)
 
 from gui.arbeiter import im_hintergrund
-from gui.bilder import zu_qimage
+from gui.bilder import startordner, zu_qimage
 from kern import anschluss, druck, platzhalter, serie, zeichnen
 
 
@@ -42,6 +42,8 @@ class SerienDialog(QDialog):
         self.hinweis.setStyleSheet("color: #c00000")
         self.hinweis.setWordWrap(True)
         self.von, self.bis, self.kopien = QSpinBox(), QSpinBox(), QSpinBox()
+        for feld in (self.von, self.bis):
+            feld.setEnabled(False)            # erst nach dem Laden einer Tabelle
         self.kopien.setRange(1, 99)
         self.balken = QProgressBar()
         self.drucken_knopf = QPushButton("Drucken")
@@ -82,7 +84,7 @@ class SerienDialog(QDialog):
 
     def _waehlen(self):
         pfad, _ = QFileDialog.getOpenFileName(self, "Tabelle wählen",
-                                              self.einstellungen.letzter_ordner,
+                                              startordner(self.einstellungen),
                                               "Tabellen (*.csv *.xlsx)")
         if pfad:
             self.einstellungen.letzter_ordner = str(Path(pfad).parent)
@@ -113,6 +115,7 @@ class SerienDialog(QDialog):
         anzahl = len(tabelle.zeilen)
         for feld in (self.von, self.bis):
             feld.setRange(1, max(1, anzahl))
+            feld.setEnabled(anzahl > 0)
         self.von.setValue(1)
         self.bis.setValue(max(1, anzahl))
         self.drucken_knopf.setEnabled(anzahl > 0 and bool(self.einstellungen.port))

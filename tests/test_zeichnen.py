@@ -87,3 +87,20 @@ def test_element_links_ausserhalb_wird_beschnitten():
         Rahmen(x_mm=-1, y_mm=0, breite_mm=5, hoehe_mm=12, strich_mm=0.5)]))
     assert not _schwarz(bild, (0, 48))        # linke Kante liegt bei x = -8
     assert _schwarz(bild, (28, 48))           # rechte Kante bei x = 28..31
+
+
+def test_zu_langer_text_wird_verkleinert_statt_abgeschnitten():
+    # 23 x 10 mm, fett 10 pt: "Paprika edelsuess" passt nur verkleinert hinein.
+    text = Text(x_mm=1, y_mm=1, breite_mm=23, hoehe_mm=10, inhalt="Gewürze\nPaprika edelsüß",
+                groesse_pt=10, fett=True, ausrichtung="mitte")
+    bild = zeichnen.zeichnen(Etikett(40, 12, [text]))
+    kasten = ImageOps.invert(bild.convert("L")).getbbox()
+    # Feld x 8..191: links und rechts bleibt Weiss, also nichts abgeschnitten
+    assert kasten[0] > 8 and kasten[2] < 192
+
+
+def test_kurzer_text_bleibt_in_eingestellter_groesse():
+    kurz = Text(x_mm=1, y_mm=1, breite_mm=38, hoehe_mm=10, inhalt="Hi", groesse_pt=10)
+    gross = Text(x_mm=1, y_mm=1, breite_mm=38, hoehe_mm=10, inhalt="Hi", groesse_pt=20)
+    hoehe = lambda t: ImageOps.invert(zeichnen.zeichnen(Etikett(40, 12, [t])).convert("L")).getbbox()[3]
+    assert hoehe(gross) > hoehe(kurz)          # wird nicht auf eine feste Groesse gezwungen

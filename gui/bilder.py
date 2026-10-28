@@ -28,3 +28,10 @@ def bild_lesen(pfad, eltern=None) -> bytes | None:
         QMessageBox.warning(eltern, "Bild", f"Das Bild lässt sich nicht lesen:\n{fehler}")
         return None
     return daten
+
+
+def startordner(einstellungen) -> str:
+    """Ordner fuer Datei-Dialoge: der zuletzt benutzte, sonst "Dokumente"."""
+    if einstellungen.letzter_ordner and Path(einstellungen.letzter_ordner).is_dir():
+        return einstellungen.letzter_ordner
+    return str(Path.home() / "Documents")

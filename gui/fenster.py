@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (QFileDialog, QInputDialog, QMainWindow, QMessageB
                                QSplitter, QToolBar, QVBoxLayout, QWidget)
 
 from gui.arbeiter import im_hintergrund
-from gui.bilder import bild_lesen
+from gui.bilder import bild_lesen, startordner
 from gui.druckleiste import Druckleiste
 from gui.eigenschaften import Eigenschaften
 from gui.flaeche import Flaeche
@@ -119,11 +119,11 @@ class Hauptfenster(QMainWindow):
         if art == "text":
             element = et.Text(x_mm=1, y_mm=1, breite_mm=b - 2, hoehe_mm=h - 2)
         elif art == "qr":
-            element = et.QRCode(x_mm=1, y_mm=1, breite_mm=h - 2, hoehe_mm=h - 2)
+            element = et.QRCode(x_mm=b - (h - 2) - 1, y_mm=1, breite_mm=h - 2, hoehe_mm=h - 2)   # rechts, neben Text
         elif art == "barcode":
             element = et.Barcode(x_mm=1, y_mm=1, breite_mm=b - 2, hoehe_mm=h - 2)
         elif art == "bild":
-            pfad, _ = QFileDialog.getOpenFileName(self, "Bild wählen", self.e.letzter_ordner, BILDER)
+            pfad, _ = QFileDialog.getOpenFileName(self, "Bild wählen", startordner(self.e), BILDER)
             daten = bild_lesen(pfad, self) if pfad else None
             if daten is None:
                 return
@@ -146,7 +146,7 @@ class Hauptfenster(QMainWindow):
         self._titel()
 
     def oeffnen(self):
-        pfad, _ = QFileDialog.getOpenFileName(self, "Vorlage öffnen", self.e.letzter_ordner, FILTER)
+        pfad, _ = QFileDialog.getOpenFileName(self, "Vorlage öffnen", startordner(self.e), FILTER)
         if pfad:
             self.oeffnen_pfad(Path(pfad))
 
@@ -169,7 +169,7 @@ class Hauptfenster(QMainWindow):
             self.speichern_pfad(self.pfad)
 
     def speichern_unter(self):
-        pfad, _ = QFileDialog.getSaveFileName(self, "Vorlage speichern", self.e.letzter_ordner, FILTER)
+        pfad, _ = QFileDialog.getSaveFileName(self, "Vorlage speichern", startordner(self.e), FILTER)
         if not pfad:
             return
         if not pfad.endswith(".etikett.json"):
