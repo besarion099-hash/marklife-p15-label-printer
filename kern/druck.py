@@ -33,12 +33,26 @@ def druckbild(etikett, werte, drehung_grad: int):
         raise DruckFehler(f"Element {index + 1}: {meldung}")
     if drehung_grad in _IM_UHRZEIGERSINN:
         bild = bild.transpose(_IM_UHRZEIGERSINN[drehung_grad])
-    if bild.width > protokoll.KOPF_PUNKTE:
-        # Breiter als der Druckkopf: mittig beschneiden, wie der Windows-Treiber
-        # (30 x 15 mm -> 120 Punkte Bandbreite, gesendet werden 112).
-        rand = (bild.width - protokoll.KOPF_PUNKTE) // 2
-        bild = bild.crop((rand, 0, rand + protokoll.KOPF_PUNKTE, bild.height))
-    return bild
+    return auf_kopfbreite(bild)
+
+
+def auf_kopfbreite(bild):
+    """Das Bild mittig auf die 112 Punkte des Druckkopfs bringen.
+
+    Kopfmitte = Bandmitte (am P15 beobachtet). Breiteres wird mittig
+    beschnitten wie beim Windows-Treiber (30 x 15 mm: 120 -> 112),
+    Schmaleres (12-mm-Band: 96 Punkte) links und rechts weiss aufgefuellt,
+    sonst laege es am linken Rand des Kopfes.
+    """
+    kopf = protokoll.KOPF_PUNKTE
+    if bild.width == kopf:
+        return bild
+    if bild.width > kopf:
+        rand = (bild.width - kopf) // 2
+        return bild.crop((rand, 0, rand + kopf, bild.height))
+    breit = Image.new(bild.mode, (kopf, bild.height), 255 if bild.mode in ("1", "L") else "white")
+    breit.paste(bild, ((kopf - bild.width) // 2, 0))
+    return breit
 
 
 def auftrag_fuer(etikett, werte, einstellungen) -> bytes:

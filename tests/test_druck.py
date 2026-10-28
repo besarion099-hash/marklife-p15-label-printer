@@ -21,10 +21,20 @@ def test_druckbild_wird_gedreht():
 
 def test_drehung_im_uhrzeigersinn():
     etikett = Etikett(2, 2, [Rahmen(x_mm=0, y_mm=0, breite_mm=1, hoehe_mm=1, strich_mm=1)])
-    # 16 x 16 Punkte, schmaler als der Kopf: wird nicht beschnitten
+    # 16 x 16 Punkte, mittig auf 112 aufgefuellt: Versatz 48
     bild = druck.druckbild(etikett, None, 90)
-    assert bild.getpixel((12, 4)) == 0       # oben links wandert nach oben rechts
-    assert bild.getpixel((4, 4)) == 255
+    assert bild.size == (112, 16)
+    assert bild.getpixel((48 + 12, 4)) == 0  # oben links wandert nach oben rechts
+    assert bild.getpixel((48 + 4, 4)) == 255
+    assert bild.getpixel((0, 4)) == 255      # Auffuellung ist weiss
+
+
+def test_zwoelf_mm_band_wird_mittig_aufgefuellt():
+    etikett = Etikett(30, 12, [Rahmen(x_mm=0, y_mm=0, breite_mm=30, hoehe_mm=12, strich_mm=0.5)])
+    bild = druck.druckbild(etikett, None, 270)
+    assert bild.size == (112, 240)
+    assert bild.getpixel((7, 120)) == 255 and bild.getpixel((8, 120)) == 0
+    assert bild.getpixel((103, 120)) == 0 and bild.getpixel((104, 120)) == 255
 
 
 def test_auftrag_fuer_etikett():
