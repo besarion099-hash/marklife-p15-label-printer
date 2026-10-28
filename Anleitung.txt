@@ -37,3 +37,13 @@ Wenn es nicht druckt
   - Der Ausdruck ist zerhackt oder bricht ab: In einstellungen.json
     "blockgroesse" auf 128 und "pause_ms" auf 50 setzen.
   - Unerwartete Fehler stehen in lauf.log.
+
+Aufkleber
+  Links "Aufkleber" anklicken. Kategorien wie in der Marklife-App
+  (Blumenladen-Geschenk, Schmuck, Pflanze, Zahlen, Sport, Wetter ...),
+  oben eine Suche mit englischen Stichwoertern (heart, flower, cake).
+  Ein Klick setzt den Aufkleber aufs Etikett; danach wie ein Bild
+  verschieben und in der Groesse aendern.
+  Grafiken: freie Sammlung Tabler Icons (MIT-Lizenz), die 29 Aufkleber
+  aus der Marklife-App und eigene Bilder. Eigene PNG/SVG in den Ordner
+  aufkleber\eigene legen; Unterordner werden zu eigenen Kategorien.
