@@ -72,6 +72,23 @@ def ports(auflisten=None, namen=bluetooth_name) -> list[Port]:
     return gefunden
 
 
+# Windows-Fehlernummern, hinter denen beim P15 ein nicht erreichbarer Drucker
+# steckt: 1167 "Das Geraet ist nicht angeschlossen", 121 "Zeitlimit fuer die
+# Semaphore". Beides heisst: aus, schlafend oder mit dem Handy verbunden.
+_NICHT_ERREICHBAR = ("1167", "121", "nicht angeschlossen", "Semaphore")
+
+
+def oeffnen_meldung(portname: str, fehler) -> str:
+    text = str(fehler)
+    if any(merkmal in text for merkmal in _NICHT_ERREICHBAR):
+        return (f"Der Drucker an {portname} ist nicht erreichbar.\n\n"
+                "Bitte prüfen:\n"
+                "• Ist er eingeschaltet? (Nach einer Pause schaltet er sich ab.)\n"
+                "• Ist das Handy noch mit ihm verbunden? Dann dort Bluetooth ausschalten.\n\n"
+                f"Technisch: {text}")
+    return f"Der Port {portname} lässt sich nicht öffnen: {text}"
+
+
 def _serial_oeffnen(portname):
     import serial
     return serial.Serial(portname, baudrate=115200, timeout=2, write_timeout=10)
@@ -117,8 +134,7 @@ class Verbindung:
             try:
                 self._port = self._oeffnen(self.portname)
             except OSError as fehler:
-                raise AnschlussFehler(
-                    f"Der Port {self.portname} lässt sich nicht öffnen: {fehler}") from fehler
+                raise AnschlussFehler(oeffnen_meldung(self.portname, fehler)) from fehler
         return self
 
     def schreiben(self, daten: bytes, blockgroesse: int = 512, pause_ms: int = 20,

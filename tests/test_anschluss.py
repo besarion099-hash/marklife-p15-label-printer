@@ -132,3 +132,12 @@ def test_mindestabstand_zwischen_verbindungen():
     with neu():
         pass
     assert len(pausen) == 4 and pausen[3] == 0
+
+
+def test_nicht_erreichbarer_drucker_bekommt_klare_meldung():
+    def aus(name):
+        raise OSError("could not open port 'COM13': OSError(22, 'Das Gerät ist nicht angeschlossen.', None, 1167)")
+    with pytest.raises(anschluss.AnschlussFehler) as info:
+        with anschluss.Verbindung("COM13", aus, schlafen=lambda s: None):
+            pass
+    assert "nicht erreichbar" in str(info.value) and "eingeschaltet" in str(info.value)
