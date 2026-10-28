@@ -10,7 +10,7 @@ E = Einstellungen(port="COM13")          # drehung_grad 270, Papiertyp 2, Dichte
 
 
 def _serie():
-    return Etikett(30, 15, [Text(inhalt="{{Name}}")])
+    return Etikett(30, 15, [Text(x_mm=10, inhalt="{{Name}}")])   # mittig, faellt beim Versatz nicht heraus
 
 
 def test_druckbild_wird_gedreht():

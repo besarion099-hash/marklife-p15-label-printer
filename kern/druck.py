@@ -40,7 +40,7 @@ def druckbild(etikett, werte, drehung_grad: int, versatz_mm: float = 0.0):
 def verschieben(bild, punkte: int):
     """Das Etikettbild waagerecht verschieben (negativ = nach links), Rest weiss.
 
-    Der P15 setzt den Druck etwa 1,5 mm zu weit nach rechts (am Geraet am
+    Der P15 setzt den Druck etwa 3,5 mm zu weit nach rechts (am Geraet am
     28.10.2026 gemessen); die Einstellung versatz_mm gleicht das aus.
     """
     if punkte == 0:
