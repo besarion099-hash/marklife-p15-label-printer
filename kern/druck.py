@@ -25,33 +25,30 @@ class DruckFehler(Exception):
         self.fertig = fertig
 
 
-def druckbild(etikett, werte, drehung_grad: int, versatz_mm: float = 0.0):
+def druckbild(etikett, werte, drehung_grad: int, rand_ende_mm: float = 0.0):
     fehler = []
     bild = zeichnen.zeichnen(etikett, werte, fehler)
     if fehler:
         index, meldung = fehler[0]
         raise DruckFehler(f"Element {index + 1}: {meldung}")
-    bild = verschieben(bild, round(versatz_mm * zeichnen.PUNKTE_JE_MM))
+    bild = ende_kuerzen(bild, round(rand_ende_mm * zeichnen.PUNKTE_JE_MM))
     if drehung_grad in _IM_UHRZEIGERSINN:
         bild = bild.transpose(_IM_UHRZEIGERSINN[drehung_grad])
     return auf_kopfbreite(bild)
 
 
-def verschieben(bild, punkte: int):
-    """Vorlauf vor dem Etikettbild: positiv = weiss davor, negativ = vorne kuerzen.
+def ende_kuerzen(bild, punkte: int):
+    """Den nicht bedruckbaren Streifen am Etikettende abschneiden.
 
-    Der P15 beginnt rund 3,9 mm VOR dem Etikett zu drucken (Lineal-Etikett
-    am 28.10.2026). Ohne Vorlauf fehlen links 3,9 mm, rechts bleiben 3,9 mm
-    leer. Mit weissem Vorlauf wird das Bild laenger statt beschnitten, und
-    das Etikett landet vollstaendig auf dem Papier.
+    Der P15 legt das Ende des Bildes rund 3,9 mm vor das Etikettende und
+    laesst, was laenger ist, links ueber den Rand laufen (Lineal-Etiketten
+    am 28.10.2026; weisser Vorlauf und der Befehl 1F 11 51 mit Schrittzahl
+    aenderten daran nichts). Ein um diesen Streifen kuerzeres Bild beginnt
+    genau am linken Etikettrand und erscheint vollstaendig.
     """
-    if punkte == 0:
+    if punkte <= 0 or punkte >= bild.width:
         return bild
-    if punkte < 0:
-        return bild.crop((-punkte, 0, bild.width, bild.height))
-    neu = Image.new(bild.mode, (bild.width + punkte, bild.height), 255)
-    neu.paste(bild, (punkte, 0))
-    return neu
+    return bild.crop((0, 0, bild.width - punkte, bild.height))
 
 
 def auf_kopfbreite(bild):
@@ -74,7 +71,7 @@ def auf_kopfbreite(bild):
 
 
 def auftrag_fuer(etikett, werte, einstellungen) -> bytes:
-    bild = druckbild(etikett, werte, einstellungen.drehung_grad, einstellungen.versatz_mm)
+    bild = druckbild(etikett, werte, einstellungen.drehung_grad, einstellungen.rand_ende_mm)
     try:
         return protokoll.auftrag(bild, einstellungen.papiertyp, einstellungen.dichte)
     except ValueError as fehler:

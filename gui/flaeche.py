@@ -11,7 +11,7 @@ Druckpunkt (1/8 mm) ein.
 from __future__ import annotations
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QPainter, QPen
+from PySide6.QtGui import QBrush, QColor, QPainter, QPen
 from PySide6.QtWidgets import QWidget
 
 from gui.bilder import zu_qimage
@@ -35,6 +35,7 @@ class Flaeche(QWidget):
         self.etikett = Etikett()
         self.auswahl = -1
         self.fehler = {}
+        self.rand_ende_mm = 0.0       # nicht bedruckbarer Streifen am Etikettende
         self._bild = None
         self._modus = None
         self._start = QPointF()
@@ -97,15 +98,24 @@ class Flaeche(QWidget):
         ziel = QRectF(links, oben, self.etikett.breite_mm * zoom, self.etikett.hoehe_mm * zoom)
         maler.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, False)
         maler.drawImage(ziel, self._bild)
+        if self.rand_ende_mm > 0:
+            streifen = QRectF(ziel.right() - self.rand_ende_mm * zoom, ziel.top(),
+                              self.rand_ende_mm * zoom, ziel.height())
+            maler.fillRect(streifen, QBrush(QColor(120, 120, 120, 110), Qt.BrushStyle.BDiagPattern))
         for index, element in enumerate(self.etikett.elemente):
             self._rahmen_malen(maler, index, element)
         maler.end()
+
+    def ausserhalb(self, element) -> bool:
+        """Ragt ueber das Etikett oder in den nicht bedruckbaren Streifen am Ende."""
+        bedruckbar = Etikett(self.etikett.breite_mm - self.rand_ende_mm, self.etikett.hoehe_mm)
+        return ragt_ueber(bedruckbar, element)
 
     def _rahmen_malen(self, maler, index, element):
         gewaehlt = index == self.auswahl
         if index in self.fehler:
             farbe = QColor("#d00000")
-        elif ragt_ueber(self.etikett, element):
+        elif self.ausserhalb(element):
             farbe = QColor("#ff8c00")
         else:
             farbe = QColor("#0060ff")

@@ -37,6 +37,7 @@ class Hauptfenster(QMainWindow):
         self.melden = lambda titel, text: QMessageBox.warning(self, titel, text)
         self.leiste = Druckleiste(self.e, port_quelle)
         self.flaeche = Flaeche()
+        self.flaeche.rand_ende_mm = self.e.rand_ende_mm
         self.eigenschaften = Eigenschaften()
         self._aufbauen()
         self._menue()
@@ -113,7 +114,8 @@ class Hauptfenster(QMainWindow):
         self._einstellungen_sichern()
 
     def neues_element(self, art):
-        b, h = self.etikett.breite_mm, self.etikett.hoehe_mm
+        b = self.etikett.breite_mm - self.e.rand_ende_mm      # nur der bedruckbare Teil
+        h = self.etikett.hoehe_mm
         if art == "text":
             element = et.Text(x_mm=1, y_mm=1, breite_mm=b - 2, hoehe_mm=h - 2)
         elif art == "qr":

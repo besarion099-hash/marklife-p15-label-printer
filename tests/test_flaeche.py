@@ -74,3 +74,11 @@ def test_fehler_werden_gemerkt(qapp):
 def test_einrasten():
     from gui.flaeche import einrasten
     assert einrasten(1.06) == 1.0 and einrasten(1.07) == 1.125
+
+
+def test_rand_am_ende_gilt_als_ausserhalb(qapp):
+    flaeche = _flaeche(Rahmen(x_mm=0, y_mm=0, breite_mm=36, hoehe_mm=12),
+                       Rahmen(x_mm=0, y_mm=0, breite_mm=38, hoehe_mm=12))
+    flaeche.rand_ende_mm = 3.9                 # Etikett 40 mm, bedruckbar 36,1
+    assert not flaeche.ausserhalb(flaeche.etikett.elemente[0])
+    assert flaeche.ausserhalb(flaeche.etikett.elemente[1])

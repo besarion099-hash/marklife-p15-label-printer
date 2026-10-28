@@ -20,7 +20,7 @@ _ERLAUBT = {
     "dichte": {1, 2, 3},
     "drehung_grad": {0, 90, 180, 270},
 }
-_MINDESTENS = {"blockgroesse": 1, "pause_ms": 0}
+_MINDESTENS = {"blockgroesse": 1, "pause_ms": 0, "rand_ende_mm": 0.0}
 
 
 @dataclass
@@ -32,7 +32,7 @@ class Einstellungen:
     papiertyp: int = 2          # 1 Endlos, 2 Etikett mit Luecke, 3 schwarze Marke
     dichte: int = 2             # 1 hell, 2 normal, 3 dunkel
     drehung_grad: int = 270     # im Uhrzeigersinn vor dem Senden; am P15 bestaetigt
-    versatz_mm: float = 0.0     # Vorlauf (+) oder vorne kuerzen (-); am P15 ohne Wirkung gegen den 3,9-mm-Rand
+    rand_ende_mm: float = 3.9   # nicht bedruckbarer Streifen am Etikettende (P15 gemessen)
     blockgroesse: int = 512
     pause_ms: int = 20
     letzter_ordner: str = ""

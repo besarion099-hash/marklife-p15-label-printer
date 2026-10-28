@@ -69,3 +69,11 @@ def test_kaputte_vorlage_wird_gemeldet(qapp, tmp_path):
     fenster.melden = lambda titel, text: meldungen.append(text)
     fenster.oeffnen_pfad(pfad)
     assert meldungen and fenster.pfad is None
+
+
+def test_neue_elemente_bleiben_im_bedruckbaren_teil(qapp, tmp_path):
+    fenster = _fenster(tmp_path)
+    fenster.leiste.groesse.setCurrentText("40 x 12 mm")
+    for art in ("text", "barcode", "rahmen", "linie"):
+        fenster.neues_element(art)
+    assert not any(fenster.flaeche.ausserhalb(e) for e in fenster.etikett.elemente)
