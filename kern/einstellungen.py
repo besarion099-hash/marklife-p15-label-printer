@@ -13,7 +13,9 @@ import os
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 
-STANDARD_PFAD = Path(__file__).resolve().parent.parent / "einstellungen.json"
+from kern.orte import DATEN
+
+STANDARD_PFAD = DATEN / "einstellungen.json"
 
 _ERLAUBT = {
     "papiertyp": {1, 2, 3},

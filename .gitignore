@@ -6,3 +6,5 @@ einstellungen.json
 einstellungen.tmp
 lauf.log
 aufkleber/
+build/
+dist/

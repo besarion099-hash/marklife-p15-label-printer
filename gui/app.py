@@ -10,7 +10,10 @@ from pathlib import Path
 WURZEL = Path(__file__).resolve().parent.parent
 if str(WURZEL) not in sys.path:
     sys.path.insert(0, str(WURZEL))
-LOG = WURZEL / "lauf.log"
+
+from kern.orte import DATEN  # noqa: E402  (braucht den Pfad oben)
+
+LOG = DATEN / "lauf.log"
 SYMBOL = WURZEL / "gui" / "symbol.ico"
 APP_ID = "Marklife.Etikettendrucker"
 
@@ -24,8 +27,8 @@ def venv_einbinden():
     Fenster einem anderen Prozess, und die Konsole laesst sich nicht
     ausblenden, weil zwei Prozesse an ihr haengen.
     """
-    if sys.prefix != sys.base_prefix:
-        return                                    # laeuft schon in der venv
+    if sys.prefix != sys.base_prefix or getattr(sys, "frozen", False):
+        return                                    # laeuft schon in der venv oder als EXE
     pakete = WURZEL / "venv" / "Lib" / "site-packages"
     if pakete.is_dir():
         import site

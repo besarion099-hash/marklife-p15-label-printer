@@ -16,7 +16,10 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-STANDARD_ORDNER = Path(__file__).resolve().parent.parent / "aufkleber"
+from kern.orte import DATEN, PROGRAMM
+
+STANDARD_ORDNER = PROGRAMM / "aufkleber"
+EIGENE_ORDNER = DATEN / "aufkleber" / "eigene"     # portabel: neben der EXE
 BILDENDUNGEN = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".svg"}
 
 # Reihenfolge und Namen wie in der Marklife-App (Screenshots vom 28.10.2026).
@@ -141,13 +144,16 @@ def ordner_katalog(ordner: Path, standardname: str) -> dict:
     return katalog
 
 
-def katalog(wurzel: Path = STANDARD_ORDNER) -> dict:
-    """Alle Kategorien in der Reihenfolge der App, dann Marklife und eigene."""
+def katalog(wurzel: Path = STANDARD_ORDNER, eigene: Path | None = None) -> dict:
+    """Alle Kategorien in der Reihenfolge der App, dann Marklife und eigene.
+    Ohne eigene: wurzel/eigene, beim Standardordner EIGENE_ORDNER."""
+    if eigene is None:
+        eigene = EIGENE_ORDNER if wurzel == STANDARD_ORDNER else wurzel / "eigene"
     gesamt = dict(tabler_katalog(wurzel / "tabler"))
     marklife = ordner_katalog(wurzel / "marklife", MARKLIFE)
     if marklife:
         gesamt[MARKLIFE] = [a for liste in marklife.values() for a in liste]
-    for name, liste in ordner_katalog(wurzel / "eigene", EIGENE).items():
+    for name, liste in ordner_katalog(eigene, EIGENE).items():
         gesamt[name if name == EIGENE else f"{EIGENE}: {name}"] = liste
     return gesamt
 

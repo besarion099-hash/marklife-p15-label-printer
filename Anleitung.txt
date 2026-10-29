@@ -9,6 +9,15 @@ Einrichten (einmalig)
   3. Starten über die Verknüpfung "Etikettendrucker" auf dem Desktop
      oder im Startmenü (oder mit Etikettendrucker.bat).
 
+Portable Fassung für andere PCs (ohne Python)
+  Im Quellordner bauen (einmalig vorher:
+  venv\Scripts\python.exe -m pip install -r requirements-bau.txt):
+     venv\Scripts\python.exe bauen.py
+  Ergebnis: dist\Etikettendrucker-<Version>-portabel.zip. Auf dem anderen
+  PC entpacken, Etikettendrucker.exe starten, P15 koppeln und oben wählen.
+  Einstellungen und eigene Aufkleber liegen dort neben der EXE.
+  Die Marklife-Aufkleber aus der Hersteller-App sind nicht enthalten.
+
 Vor dem ersten Druck
   Menü Drucker > Ausrichtung testen. Es kommen zwei Etiketten heraus
   (90° und 270°; der P15 druckt der Länge nach, 0° und 180° passen nicht).
