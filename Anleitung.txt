@@ -21,9 +21,10 @@ Ein Etikett gestalten
   Entf löscht das gewählte Element.
 
   Rahmen und Linien: Links "Rahmen …" oder "Linie …" anklicken. Es
-  öffnet sich eine Galerie mit je rund 40 Formen (doppelt, oval,
+  öffnet sich eine Galerie mit je rund 50 Formen (doppelt, oval,
   Art déco, Schnörkel, Briefmarke, Perlen, Sterne, Mäander; dazu Pflanzen:
-  Lorbeerkranz, Blätterkante, Blüten, Ranken, Blumenwiese, Gras
+  Lorbeerkranz, Blätterkante, Blüten, Ranken, Blumenwiese, Gras; Natur:
+  Pilze, Tulpen, Gänseblümchen, Lavendel, Rosmarin, Blätter, Berge, Tannen
   ...). Ein Klick setzt die Form aufs Etikett. Die Form eines gewählten
   Rahmens oder einer Linie ändert rechts der Knopf "Form". Alle Formen
   sind für den Thermodruck ausgelegt (Striche mindestens 0,25 mm,

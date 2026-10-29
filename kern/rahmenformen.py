@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from kern.formen import (ECKEN, MIN_PUNKTE, folge, gespiegelt, muster, raute, ringsum, scheibe,
                          spirale, strecke, zierstrich, zug)
-from kern import pflanzen
+from kern import naturrahmen, pflanzen
 from kern.rahmenmuster import (briefmarke, herzen, kordel, kreise, perlen, schienen, sterne,
                                wellen, zacken)
 
@@ -238,4 +238,4 @@ FORMEN = [
     ("briefmarke", "Briefmarke", briefmarke), ("kordel", "Kordel", kordel),
     ("schienen", "Schienen", schienen), ("perlen", "Perlen", perlen), ("kreise", "Kreise", kreise),
     ("sterne", "Sterne", sterne), ("herzen", "Herzen", herzen),
-] + pflanzen.RAHMEN
+] + pflanzen.RAHMEN + naturrahmen.RAHMEN
