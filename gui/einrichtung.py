@@ -119,17 +119,17 @@ class WindowsDruckerSeite(QWizardPage):
             self.knopf.setEnabled(False)
             self.status.setText(f"<span style='color:#11772d'>✔ Schon eingerichtet: "
                                 f"„{einrichtung.DRUCKERNAME}“ an {port}.</span>")
-        elif not self._werkzeug.treiber_da() and not self._werkzeug.paket_da():
-            self.wahl.setChecked(False)
-            self.wahl.setEnabled(False)
-            self.knopf.setEnabled(False)
-            self.status.setText("Das Treiberpaket liegt nicht bei (Ordner treiber\\p15). "
-                                "Dieser Schritt lässt sich überspringen.")
         else:
             self.wahl.setChecked(True)
             self.knopf.setEnabled(True)
             hinweis = f" (bisher an {vorhanden})" if vorhanden else ""
-            self.status.setText(f"Wird an {port} eingerichtet{hinweis}.")
+            text = f"Wird an {port} eingerichtet{hinweis}."
+            if not self._werkzeug.treiber_da() and not self._werkzeug.paket_da():
+                text += ("<br>Der Treiber kommt vom Hersteller: Das Programm lädt ihn von "
+                         "marklifeprinter.com (ca. 6 MB), prüft die Signatur und startet "
+                         "das Installationsprogramm des Herstellers. Dort einfach "
+                         "durchklicken.")
+            self.status.setText(text)
 
     def einrichten(self) -> bool:
         QGuiApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)

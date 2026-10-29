@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import io
 import re
 import subprocess
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -58,10 +60,61 @@ def test_einrichten_mit_admin_wenn_treiber_fehlt(tmp_path):
     assert "-Verb RunAs" in ps.befehle[-1]
 
 
-def test_ohne_treiber_und_ohne_paket_kommt_klare_meldung(tmp_path):
-    with pytest.raises(einrichtung.EinrichtungsFehler, match="Treiberpaket fehlt"):
-        einrichtung.einrichten("COM5", FalschesPowershell(treiber=False),
-                               paket=tmp_path / "fehlt.inf")
+def _zip(**dateien):
+    puffer = io.BytesIO()
+    with zipfile.ZipFile(puffer, "w") as archiv:
+        for name, inhalt in dateien.items():
+            archiv.writestr(name, inhalt)
+    return puffer.getvalue()
+
+
+OFFIZIELL = _zip(**{"P15V1.0.1WINDOWS/P15_Printer_Driver V1.0.1.exe": b"MZ installer"})
+
+
+def test_ohne_paket_kommt_der_installer_vom_hersteller(tmp_path):
+    ps = FalschesPowershell(treiber=False)
+    geladen = []
+    meldung = einrichtung.einrichten(
+        "COM5", ps, paket=tmp_path / "fehlt.inf",
+        laden=lambda adresse: geladen.append(adresse) or OFFIZIELL, pruefen=lambda d: True)
+    assert geladen == [einrichtung.DOWNLOAD]
+    installer = [b for b in ps.befehle if "Start-Process -FilePath" in b]
+    assert len(installer) == 1 and "P15_Printer_Driver V1.0.1.exe" in installer[0]
+    assert "-Verb RunAs" in installer[0]
+    assert "RunAs" not in ps.befehle[-1] and "COM5" in meldung      # Skript danach ohne Admin
+
+
+def test_unsignierter_installer_wird_nicht_gestartet(tmp_path):
+    ps = FalschesPowershell(treiber=False)
+    with pytest.raises(einrichtung.EinrichtungsFehler, match="nicht vom Hersteller signiert"):
+        einrichtung.einrichten("COM5", ps, paket=tmp_path / "fehlt.inf",
+                               laden=lambda a: OFFIZIELL, pruefen=lambda d: False)
+    assert not any("Start-Process -FilePath" in b for b in ps.befehle)
+
+
+def test_download_ohne_installer(tmp_path):
+    with pytest.raises(einrichtung.EinrichtungsFehler, match="keinen Treiber-Installer"):
+        einrichtung.installer_herunterladen(tmp_path, lambda a: _zip(liesmich="x"),
+                                            lambda d: True)
+    with pytest.raises(einrichtung.EinrichtungsFehler, match="keinen Treiber-Installer"):
+        einrichtung.installer_herunterladen(tmp_path, lambda a: b"<html>", lambda d: True)
+
+
+def test_download_fehler_nennt_die_seite(tmp_path):
+    def kaputt(adresse):
+        raise OSError("keine Verbindung")
+    with pytest.raises(einrichtung.EinrichtungsFehler, match="marklifeprinter.com"):
+        einrichtung.installer_herunterladen(tmp_path, kaputt, lambda d: True)
+
+
+def test_signaturpruefung_liest_status_und_inhaber(tmp_path):
+    def antwort(text):
+        return lambda befehl, zeit=0: subprocess.CompletedProcess([], 0, text, "")
+    datei = tmp_path / "x.exe"
+    assert einrichtung.signiert_vom_hersteller(
+        datei, antwort('Valid|CN="Shenzhen Yinxiaoqian Technology Co., Ltd."'))
+    assert not einrichtung.signiert_vom_hersteller(datei, antwort("NotSigned|"))
+    assert not einrichtung.signiert_vom_hersteller(datei, antwort("Valid|CN=Jemand anders"))
 
 
 def test_fehler_des_skripts_wird_weitergegeben(tmp_path):
@@ -149,11 +202,15 @@ def test_schon_eingerichtet_fragt_nicht_nach_admin(qapp):
     assert assistent.windows.validatePage() and werkzeug.eingerichtet == []
 
 
-def test_ohne_treiberpaket_laesst_sich_ueberspringen(qapp):
-    assistent, _ = _assistent([P15], FalschesWerkzeug(treiber=False, paket=False))
+def test_ohne_treiberpaket_kuendigt_den_download_an(qapp):
+    werkzeug = FalschesWerkzeug(treiber=False, paket=False)
+    assistent, _ = _assistent([P15], werkzeug)
     assistent.koppeln.suchen()
     assistent.windows.initializePage()
-    assert not assistent.windows.wahl.isEnabled() and assistent.windows.validatePage()
+    assert assistent.windows.wahl.isChecked()
+    assert "marklifeprinter.com" in assistent.windows.status.text()
+    assistent.windows.wahl.setChecked(False)                 # ueberspringen geht auch
+    assert assistent.windows.validatePage() and werkzeug.eingerichtet == []
 
 
 def test_fehlschlag_haelt_an(qapp):

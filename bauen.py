@@ -7,13 +7,16 @@ die EXE starten, ohne Python. Einstellungen, lauf.log und eigene Aufkleber
 landen neben der EXE (kern.orte).
 
 Aufruf (einmalig vorher: venv\\Scripts\\python.exe -m pip install -r requirements-bau.txt):
-    venv\\Scripts\\python.exe bauen.py
+    venv\\Scripts\\python.exe bauen.py                  zum Veroeffentlichen
+    venv\\Scripts\\python.exe bauen.py --mit-treiber    nur fuer eigene PCs
 
 Mit hinein kommen nur die freien Tabler Icons (MIT), nicht die Aufkleber
 aus der Marklife-App (aufkleber\\marklife) - die gehoeren dem Hersteller.
 
-Das Windows-Treiberpaket des P15 (YinXiaoQian, signiert) kommt nach
-treiber\\p15 neben die EXE, fuer den Einrichtungs-Assistenten. Fehlt es im
+Den Windows-Treiber des P15 laedt der Einrichtungs-Assistent beim
+Hersteller. Nur mit --mit-treiber kommt das Treiberpaket (YinXiaoQian,
+signiert, darf nicht oeffentlich verteilt werden) nach treiber\\p15 neben
+die EXE, dann geht die Einrichtung auch ohne Internet. Fehlt es im
 Quellordner, holt bauen.py es aus dem Windows-Treiberspeicher dieses PCs.
 """
 
@@ -47,9 +50,10 @@ Erster Start auf einem neuen PC:
   1. Bluetooth: Er öffnet die Windows-Einstellungen und meldet, sobald
      der P15 gekoppelt ist (Handy vorher trennen).
   2. Freiwillig: Er richtet den Windows-Drucker "Marklife P15" mit dem
-     Treiber des Herstellers ein (Ordner treiber\\p15), damit man auch aus
-     Word & Co. drucken kann. Windows fragt dafür einmal nach
-     Administratorrechten.
+     Treiber des Herstellers ein, damit man auch aus Word & Co. drucken
+     kann. Den Treiber lädt er von marklifeprinter.com, prüft die
+     Signatur und startet das Installationsprogramm des Herstellers.
+     Windows fragt dafür einmal nach Administratorrechten.
   3. Fertig: Das Programm druckt auf den gefundenen P15.
 
 Warnt Windows beim ersten Start ("Der Computer wurde durch Windows
@@ -110,7 +114,8 @@ def treiberpaket() -> Path | None:
     return TREIBER
 
 
-def main() -> int:
+def main(argumente=None) -> int:
+    mit_treiber = "--mit-treiber" in (sys.argv[1:] if argumente is None else argumente)
     if not (TABLER / "icons.json").is_file():
         print("aufkleber\\tabler fehlt - erst install.bat oder aufkleber_holen.py ausführen.")
         return 1
@@ -133,13 +138,17 @@ def main() -> int:
     (ordner / "aufkleber" / "eigene").mkdir(parents=True, exist_ok=True)
     (ordner / "LIESMICH.txt").write_text(LIESMICH, encoding="utf-8")
     shutil.copy2(HIER / "Anleitung.txt", ordner / "Anleitung.txt")
-    paket = treiberpaket()
-    if paket is None:
-        print("Hinweis: kein P15-Treiberpaket gefunden - der Assistent bietet dann "
-              "keinen Windows-Drucker an.")
-    else:
-        shutil.copytree(paket, ordner / "treiber" / "p15", dirs_exist_ok=True)
-    archiv = shutil.make_archive(str(DIST / f"{NAME}-{VERSION}-portabel"), "zip", DIST, NAME)
+    zusatz = ""
+    if mit_treiber:
+        paket = treiberpaket()
+        if paket is None:
+            print("Hinweis: kein P15-Treiberpaket gefunden - der Assistent lädt ihn "
+                  "dann beim Hersteller.")
+        else:
+            shutil.copytree(paket, ordner / "treiber" / "p15", dirs_exist_ok=True)
+            zusatz = "-mit-treiber"                # nicht veroeffentlichen
+    archiv = shutil.make_archive(str(DIST / f"{NAME}-{VERSION}-portabel{zusatz}"), "zip",
+                                 DIST, NAME)
     groesse = Path(archiv).stat().st_size / 1e6
     print(f"\nFertig: {ordner}\n        {archiv} ({groesse:.0f} MB)")
     return 0
