@@ -149,7 +149,8 @@ class Hauptfenster(QMainWindow):
             if daten is None:
                 return
             self.e.letzter_ordner = str(Path(pfad).parent)
-            element = et.Bild(x_mm=1, y_mm=1, breite_mm=h - 2, hoehe_mm=h - 2, daten=daten)
+            element = et.Bild(x_mm=1, y_mm=1, breite_mm=h - 2, hoehe_mm=h - 2, daten=daten,
+                              verfahren="fehlerverteilung")    # meist Fotos; Aufkleber bleiben Schwelle
         elif art == "aufkleber":
             element = self._aufkleber_waehlen(h)
             if element is None:
@@ -237,9 +238,11 @@ class Hauptfenster(QMainWindow):
     def ausrichtung_testen(self):
         if QMessageBox.question(
                 self, "Ausrichtung testen",
-                "Es werden vier Etiketten gedruckt, je eines mit 0°, 90°, 180° und 270° "
-                "Drehung. Danach fragt das Programm, welches den Pfeil nach oben zeigt "
-                "und lesbar ist.\n\nWeiter?") != QMessageBox.StandardButton.Yes:
+                "Es werden zwei Etiketten gedruckt, je eines mit 90° und 270° Drehung. "
+                "(0° und 180° passen nicht: Der P15 druckt das Etikett der Länge nach, "
+                "quer ist sein Druckkopf nur 14 mm breit.) Danach fragt das Programm, "
+                "welches den Pfeil nach oben zeigt und lesbar ist.\n\nWeiter?"
+        ) != QMessageBox.StandardButton.Yes:
             return
         self.leiste.uebernehmen()
         breite, hoehe = self.leiste.groesse_mm()

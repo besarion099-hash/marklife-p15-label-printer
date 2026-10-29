@@ -10,7 +10,8 @@ Einrichten (einmalig)
      oder im Startmenü (oder mit Etikettendrucker.bat).
 
 Vor dem ersten Druck
-  Menü Drucker > Ausrichtung testen. Es kommen vier Etiketten heraus.
+  Menü Drucker > Ausrichtung testen. Es kommen zwei Etiketten heraus
+  (90° und 270°; der P15 druckt der Länge nach, 0° und 180° passen nicht).
   Das Etikett nehmen, auf dem der Pfeil nach oben zeigt und der Text
   lesbar ist, und dessen Gradzahl auswählen. Das Programm merkt sie sich.
 

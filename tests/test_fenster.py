@@ -142,3 +142,13 @@ def test_werkzeuge_haben_symbole(qapp, tmp_path):
     leiste = fenster.findChild(QToolBar)
     assert all(not a.icon().isNull() for a in leiste.actions())
     assert fenster.leiste.knopf.objectName() == "haupt"
+
+
+def test_bild_nimmt_fehlerverteilung(qapp, tmp_path, monkeypatch):
+    from gui import fenster as modul
+    monkeypatch.setattr(modul.QFileDialog, "getOpenFileName",
+                        staticmethod(lambda *a, **k: (str(tmp_path / "foto.png"), "")))
+    monkeypatch.setattr(modul, "bild_lesen", lambda pfad, eltern: b"png")
+    fenster = _fenster(tmp_path)
+    fenster.neues_element("bild")
+    assert fenster.etikett.elemente[0].verfahren == "fehlerverteilung"
