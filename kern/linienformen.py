@@ -12,6 +12,7 @@ import math
 
 from kern.formen import (MIN_PUNKTE, folge, halbhoch, herz, mittellinie, muster, raute, ring,
                          scheibe, stern, strecke, verteilt, zierstrich, zug)
+from kern import pflanzen
 from kern.linienzier import (_mit_mitte, art_deco, doppelpfeil, drei_punkte, hantel, pfeil,
                              ranke, schnoerkel)
 
@@ -205,12 +206,12 @@ FORMEN = [
     ("pfeil", "Pfeil", pfeil), ("doppelpfeil", "Doppelpfeil", doppelpfeil),
     ("schnoerkel", "Schnörkel", schnoerkel), ("ranke", "Blattranke", ranke),
     ("art-deco", "Art déco", art_deco),
-]
+] + pflanzen.LINIEN
 
 # Hoehe beim Einfuegen: einfache Linien 1 mm, mehrfache 2 mm, Zierlinien 3 mm.
 FEIN = {"durchgezogen", "gestrichelt", "lang-gestrichelt", "gepunktet", "strich-punkt",
         "strich-punkt-punkt"}
 MITTEL = {"doppelt", "dick-duenn", "dreifach"}
-GROSS = {"schnoerkel", "ranke", "art-deco"}
+GROSS = {"schnoerkel", "ranke", "art-deco"} | {name for name, _, _ in pflanzen.LINIEN}
 HOEHE_MM = {name: 1.0 if name in FEIN else 2.0 if name in MITTEL else 4.0 if name in GROSS
             else 3.0 for name, _, _ in FORMEN}

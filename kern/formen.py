@@ -136,11 +136,12 @@ def herz(z, x, y, r):
     z.polygon(punkte, fill=0)
 
 
-def blatt(z, x, y, laenge, winkel):
-    """Spitzes Blatt (Linse) ab (x, y) in Richtung winkel (Bogenmass)."""
+def blatt(z, x, y, laenge, winkel, breite=0.22):
+    """Spitzes Blatt (Linse) ab (x, y) in Richtung winkel (Bogenmass);
+    breite ist die halbe Blattbreite als Anteil der Laenge."""
     dx, dy = math.cos(winkel), math.sin(winkel)
     nx, ny = -dy, dx
-    breit = laenge * 0.22
+    breit = laenge * breite
     oben, unten = [], []
     for i in range(13):
         t = i / 12
