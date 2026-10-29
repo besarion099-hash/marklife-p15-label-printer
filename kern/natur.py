@@ -190,7 +190,7 @@ def tannen(z, b, h, s):
 def _verteilt(von, bis, abstand):
     if bis <= von:
         return [(von + bis) / 2]
-    n = max(1, round((bis - von) / abstand))
+    n = max(1, round((bis - von) / max(1.0, abstand)))    # winzige Flaechen: kein Teilen durch 0
     return [von + i * (bis - von) / n for i in range(n + 1)]
 
 
