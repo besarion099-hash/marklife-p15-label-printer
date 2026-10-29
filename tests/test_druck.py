@@ -108,10 +108,11 @@ def test_vorgabe_rand_ist_am_p15_gemessen():
     assert Einstellungen().rand_ende_mm == 3.9
 
 
-def test_versatz_schiebt_inhalt_nach_rechts():
-    etikett = Etikett(10, 2, [Rahmen(x_mm=0, y_mm=0, breite_mm=1, hoehe_mm=2, strich_mm=1)])
-    ohne = druck.druckbild(etikett, None, 0)
-    mit = druck.druckbild(etikett, None, 0, versatz_mm=2)
-    assert ohne.size == mit.size
-    assert ohne.getpixel((18, 8)) == 0 and mit.getpixel((18, 8)) == 255   # +16: mittig auf 112
-    assert mit.getpixel((18 + 16, 8)) == 0                 # 2 mm = 16 Punkte weiter rechts
+def test_versatz_schiebt_inhalt_nach_rechts_ohne_abzuschneiden():
+    etikett = Etikett(10, 2, [Rahmen(x_mm=8, y_mm=0, breite_mm=2, hoehe_mm=2, strich_mm=1)])
+    ohne = druck.druckbild(etikett, None, 0, rand_ende_mm=1)
+    mit = druck.druckbild(etikett, None, 0, rand_ende_mm=1, versatz_mm=1)
+    assert ohne.size == mit.size == (112, 16)               # beide mittig auf 112
+    # ohne: 72 Punkte breit, Versatz 20; mit: 80 breit (8 weiss links), Versatz 16
+    assert ohne.getpixel((20 + 64, 8)) == 0
+    assert mit.getpixel((16 + 8 + 64, 8)) == 0 and mit.getpixel((16 + 3, 8)) == 255

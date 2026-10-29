@@ -32,21 +32,28 @@ def druckbild(etikett, werte, drehung_grad: int, rand_ende_mm: float = 0.0,
     if fehler:
         index, meldung = fehler[0]
         raise DruckFehler(f"Element {index + 1}: {meldung}")
-    bild = verschieben(bild, round(versatz_mm * zeichnen.PUNKTE_JE_MM))
     bild = ende_kuerzen(bild, round(rand_ende_mm * zeichnen.PUNKTE_JE_MM))
+    bild = verschieben(bild, round(versatz_mm * zeichnen.PUNKTE_JE_MM))
     if drehung_grad in _IM_UHRZEIGERSINN:
         bild = bild.transpose(_IM_UHRZEIGERSINN[drehung_grad])
     return auf_kopfbreite(bild)
 
 
 def verschieben(bild, punkte: int):
-    """Inhalt waagerecht verschieben (Etikett-Koordinaten, + = nach rechts);
-    die Bildgroesse bleibt, frei werdender Rand ist weiss."""
-    if punkte == 0:
-        return bild
-    neu = Image.new(bild.mode, bild.size, 255)
-    neu.paste(bild, (punkte, 0))
-    return neu
+    """Inhalt waagerecht verschieben (Etikett-Koordinaten, + = nach rechts).
+
+    Nach rechts kommt weisser Rand links dazu, ohne rechts etwas
+    abzuschneiden; nach links wird links abgeschnitten. Fuer den P15 mit
+    90 Grad: rand_ende_mm = versatz_mm, dann bleibt das Bild 40 mm lang
+    (Lineal-Etikett am 29.10.2026).
+    """
+    if punkte > 0:
+        neu = Image.new(bild.mode, (bild.width + punkte, bild.height), 255)
+        neu.paste(bild, (punkte, 0))
+        return neu
+    if punkte < 0 and -punkte < bild.width:
+        return bild.crop((-punkte, 0, bild.width, bild.height))
+    return bild
 
 
 def ende_kuerzen(bild, punkte: int):
