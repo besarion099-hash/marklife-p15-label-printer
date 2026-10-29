@@ -135,8 +135,19 @@ def _linie(p):
     p.drawEllipse(QPointF(44, 24), 2.5, 2.5)
 
 
+def _serie(p):
+    """Drei gestaffelte Etiketten, auf dem vordersten Zeilen wie aus einer Tabelle."""
+    for versatz in (12, 6, 0):
+        p.setPen(_stift(2.2))
+        p.setBrush(Qt.GlobalColor.white)
+        p.drawRoundedRect(QRectF(4 + versatz, 22 - versatz, 30, 20), 3, 3)
+    p.setPen(_stift(2.4))
+    for y, laenge in ((28, 20), (34, 14)):
+        p.drawLine(QPointF(9, y), QPointF(9 + laenge, y))
+
+
 SYMBOLE = {"text": _text, "qr": _qr, "barcode": _barcode, "bild": _bild,
-           "aufkleber": _aufkleber, "rahmen": _rahmen, "linie": _linie}
+           "aufkleber": _aufkleber, "rahmen": _rahmen, "linie": _linie, "serie": _serie}
 
 
 def werkzeug_symbol(art):

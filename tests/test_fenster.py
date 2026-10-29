@@ -140,7 +140,9 @@ def test_werkzeuge_haben_symbole(qapp, tmp_path):
     from PySide6.QtWidgets import QToolBar
     fenster = _fenster(tmp_path)
     leiste = fenster.findChild(QToolBar)
-    assert all(not a.icon().isNull() for a in leiste.actions())
+    knoepfe = [a for a in leiste.actions() if not a.isSeparator()]
+    assert all(not a.icon().isNull() for a in knoepfe)
+    assert knoepfe[-1].text() == "Serien-Druck …"
     assert fenster.leiste.knopf.objectName() == "haupt"
 
 
