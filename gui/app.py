@@ -107,6 +107,9 @@ def main() -> int:
     aussehen.anwenden(app)
     fenster = Hauptfenster()
     fenster.show()
+    if fenster.erster_start_ohne_drucker():
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(400, fenster.einrichten)       # neuer PC: gleich beim Koppeln helfen
     return app.exec()
 
 

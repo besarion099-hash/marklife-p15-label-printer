@@ -11,6 +11,10 @@ Aufruf (einmalig vorher: venv\\Scripts\\python.exe -m pip install -r requirement
 
 Mit hinein kommen nur die freien Tabler Icons (MIT), nicht die Aufkleber
 aus der Marklife-App (aufkleber\\marklife) - die gehoeren dem Hersteller.
+
+Das Windows-Treiberpaket des P15 (YinXiaoQian, signiert) kommt nach
+treiber\\p15 neben die EXE, fuer den Einrichtungs-Assistenten. Fehlt es im
+Quellordner, holt bauen.py es aus dem Windows-Treiberspeicher dieses PCs.
 """
 
 from __future__ import annotations
@@ -29,15 +33,24 @@ NAME = "Etikettendrucker"
 BAU = HIER / "build"
 DIST = HIER / "dist"
 TABLER = HIER / "aufkleber" / "tabler"
+TREIBER = HIER / "treiber" / "p15"
+SPEICHER = Path(os.environ.get("WINDIR", r"C:\Windows")) / "System32" / "DriverStore" / "FileRepository"
+PAKETDATEIEN = ["yxqpor.inf", "YinXiaoQian.cat", "P15x.GPD", "P15.INI", "amd64"]
 
 LIESMICH = f"""Etikettendrucker {VERSION} (portabel) - Etiketten für den Marklife P15
 
 Start: {NAME}.exe doppelklicken. Python ist nicht nötig.
 
 Erster Start auf einem neuen PC:
-  1. Den P15 einschalten und in Windows unter Einstellungen > Bluetooth
-     koppeln (Handy vorher trennen).
-  2. Im Programm oben bei "Drucker" den P15 wählen.
+  Ist noch kein P15 gekoppelt, öffnet sich der Einrichtungs-Assistent
+  (später auch über Drucker > Einrichten):
+  1. Bluetooth: Er öffnet die Windows-Einstellungen und meldet, sobald
+     der P15 gekoppelt ist (Handy vorher trennen).
+  2. Freiwillig: Er richtet den Windows-Drucker "Marklife P15" mit dem
+     Treiber des Herstellers ein (Ordner treiber\\p15), damit man auch aus
+     Word & Co. drucken kann. Windows fragt dafür einmal nach
+     Administratorrechten.
+  3. Fertig: Das Programm druckt auf den gefundenen P15.
 
 Warnt Windows beim ersten Start ("Der Computer wurde durch Windows
 geschützt"): auf "Weitere Informationen" und "Trotzdem ausführen" klicken.
@@ -80,6 +93,23 @@ def daten(quelle: Path, ziel: str) -> list:
     return ["--add-data", f"{quelle}{os.pathsep}{ziel}"]
 
 
+def treiberpaket() -> Path | None:
+    """treiber\\p15 im Quellordner, sonst aus dem Treiberspeicher dieses PCs kopiert."""
+    if (TREIBER / "yxqpor.inf").is_file():
+        return TREIBER
+    funde = sorted(SPEICHER.glob("yxqpor.inf_amd64_*"), key=lambda p: p.stat().st_mtime)
+    if not funde:
+        return None
+    TREIBER.mkdir(parents=True, exist_ok=True)
+    for name in PAKETDATEIEN:
+        quelle = funde[-1] / name
+        if quelle.is_dir():
+            shutil.copytree(quelle, TREIBER / name, dirs_exist_ok=True)
+        else:
+            shutil.copy2(quelle, TREIBER / name)
+    return TREIBER
+
+
 def main() -> int:
     if not (TABLER / "icons.json").is_file():
         print("aufkleber\\tabler fehlt - erst install.bat oder aufkleber_holen.py ausführen.")
@@ -94,6 +124,7 @@ def main() -> int:
         *daten(HIER / "gui" / "symbol.png", "gui"),
         *daten(HIER / "gui" / "symbol.ico", "gui"),
         *daten(TABLER, "aufkleber/tabler"),
+        *daten(HIER / "treiber" / "drucker_einrichten.ps1", "treiber"),
         "--exclude-module", "tkinter", "--exclude-module", "pytest",
         "--distpath", str(DIST), "--workpath", str(BAU), "--specpath", str(BAU),
         str(HIER / "gui" / "app.py"),
@@ -102,6 +133,12 @@ def main() -> int:
     (ordner / "aufkleber" / "eigene").mkdir(parents=True, exist_ok=True)
     (ordner / "LIESMICH.txt").write_text(LIESMICH, encoding="utf-8")
     shutil.copy2(HIER / "Anleitung.txt", ordner / "Anleitung.txt")
+    paket = treiberpaket()
+    if paket is None:
+        print("Hinweis: kein P15-Treiberpaket gefunden - der Assistent bietet dann "
+              "keinen Windows-Drucker an.")
+    else:
+        shutil.copytree(paket, ordner / "treiber" / "p15", dirs_exist_ok=True)
     archiv = shutil.make_archive(str(DIST / f"{NAME}-{VERSION}-portabel"), "zip", DIST, NAME)
     groesse = Path(archiv).stat().st_size / 1e6
     print(f"\nFertig: {ordner}\n        {archiv} ({groesse:.0f} MB)")

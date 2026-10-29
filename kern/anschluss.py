@@ -72,6 +72,14 @@ def ports(auflisten=None, namen=bluetooth_name) -> list[Port]:
     return gefunden
 
 
+def drucker_port(gefunden) -> Port | None:
+    """Der erste gekoppelte Etikettendrucker (Bluetooth, Name wie P15_...)."""
+    for port in gefunden:
+        if port.bluetooth and _DRUCKERNAME.match(port.beschreibung):
+            return port
+    return None
+
+
 # Windows-Fehlernummern, hinter denen beim P15 ein nicht erreichbarer Drucker
 # steckt: 1167 "Das Geraet ist nicht angeschlossen", 121 "Zeitlimit fuer die
 # Semaphore". Beides heisst: aus, schlafend oder mit dem Handy verbunden.

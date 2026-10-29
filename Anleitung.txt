@@ -16,7 +16,16 @@ Portable Fassung für andere PCs (ohne Python)
   Ergebnis: dist\Etikettendrucker-<Version>-portabel.zip. Auf dem anderen
   PC entpacken, Etikettendrucker.exe starten, P15 koppeln und oben wählen.
   Einstellungen und eigene Aufkleber liegen dort neben der EXE.
-  Die Marklife-Aufkleber aus der Hersteller-App sind nicht enthalten.
+  Die Marklife-Aufkleber aus der Hersteller-App sind nicht enthalten,
+  wohl aber der Windows-Treiber des P15 (treiber\p15).
+
+Einrichtungs-Assistent (Drucker > Einrichten)
+  Öffnet sich beim ersten Start von selbst, wenn noch kein P15
+  gekoppelt ist. Schritt 1 hilft beim Koppeln per Bluetooth und meldet,
+  sobald der P15 da ist. Schritt 2 (freiwillig) richtet den
+  Windows-Drucker "Marklife P15" mit dem Treiber des Herstellers ein,
+  zum Drucken aus Word & Co.; fehlt der Treiber, fragt Windows einmal
+  nach Administratorrechten. Das Programm selbst braucht ihn nicht.
 
 Vor dem ersten Druck
   Menü Drucker > Ausrichtung testen. Es kommen zwei Etiketten heraus

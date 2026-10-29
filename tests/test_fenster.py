@@ -155,3 +155,24 @@ def test_bild_nimmt_fehlerverteilung(qapp, tmp_path, monkeypatch):
     fenster = _fenster(tmp_path)
     fenster.neues_element("bild")
     assert fenster.etikett.elemente[0].verfahren == "fehlerverteilung"
+
+
+def test_einrichten_uebernimmt_den_port(qapp, tmp_path):
+    zweiter = Port("COM20", "P15_AB12C (COM20)", True)
+    fenster = _fenster(tmp_path, gefunden=(P15, zweiter))
+
+    class Fertig:
+        port = zweiter
+
+        def exec(self):
+            return True
+    fenster.assistent_bauen = lambda eltern: Fertig()
+    fenster.einrichten()
+    assert fenster.e.port == "COM20"
+    assert fenster.leiste.port.currentData() == "COM20"
+    assert (tmp_path / "e.json").exists()
+
+
+def test_erster_start_ohne_drucker_bietet_assistent_an(qapp, tmp_path):
+    assert _fenster(tmp_path / "a", gefunden=()).erster_start_ohne_drucker()
+    assert not _fenster(tmp_path / "b").erster_start_ohne_drucker()      # P15 gekoppelt

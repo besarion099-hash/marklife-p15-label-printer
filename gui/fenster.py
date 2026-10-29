@@ -16,6 +16,7 @@ from gui.aussehen import werkzeug_symbol
 from kern import aufkleber as ak
 from gui.bilder import bild_lesen, startordner
 from gui.druckleiste import Druckleiste
+from gui.einrichtung import EinrichtungsAssistent
 from gui.eigenschaften import Eigenschaften
 from gui.formen import form_waehlen
 from gui.flaeche import Flaeche
@@ -35,13 +36,16 @@ class Hauptfenster(QMainWindow):
                  port_quelle=anschluss.ports, verbinden=anschluss.Verbindung):
         super().__init__()
         self._e_pfad = Path(einstellungen_pfad)
+        self.erster_start = not self._e_pfad.exists()
         self.e = einstellungen.laden(self._e_pfad)
         self._verbinden = verbinden
+        self._port_quelle = port_quelle
         self.pfad = None
         self._faden = self._arbeiter = None
         self._katalog = None             # Aufkleber, erst beim ersten Oeffnen eingelesen
         self.melden = lambda titel, text: QMessageBox.warning(self, titel, text)
         self.form_waehlen = form_waehlen   # Galerie fuer Rahmen/Linie, im Test ersetzbar
+        self.assistent_bauen = lambda eltern: EinrichtungsAssistent(port_quelle, eltern=eltern)
         self.leiste = Druckleiste(self.e, port_quelle)
         self.flaeche = Flaeche()
         self.flaeche.rand_ende_mm = self.e.rand_ende_mm
@@ -104,6 +108,8 @@ class Hauptfenster(QMainWindow):
         datei.addSeparator()
         self._eintrag(datei, "&Beenden", self.close)
         drucker = self.menuBar().addMenu("D&rucker")
+        self._eintrag(drucker, "&Einrichten (Bluetooth, Windows-Drucker) …", self.einrichten)
+        drucker.addSeparator()
         self._eintrag(drucker, "&Ausrichtung testen …", self.ausrichtung_testen)
         self._eintrag(drucker, "&Lage feinjustieren …", self.lage_feinjustieren)
         self._eintrag(drucker, "Drucker &neu suchen", self.leiste.ports_neu)
@@ -278,6 +284,24 @@ class Hauptfenster(QMainWindow):
 
     def ueber(self):
         ueber_zeigen(self)
+
+    def einrichten(self):
+        assistent = self.assistent_bauen(self)
+        if assistent.exec() and assistent.port is not None:
+            self.e.port = assistent.port.name
+            self.leiste.ports_neu()
+            self._einstellungen_sichern()
+            self.statusBar().showMessage(f"Drucker {assistent.port.beschreibung} gewählt.", 8000)
+
+    def erster_start_ohne_drucker(self) -> bool:
+        """Noch keine Einstellungen und kein gekoppelter P15: Assistent anbieten."""
+        return self.erster_start and anschluss.drucker_port(self._ports()) is None
+
+    def _ports(self):
+        try:
+            return self._port_quelle()
+        except Exception:
+            return []
 
     def _im_hintergrund(self, aufgabe, was, danach=None):
         if self._faden is not None and self._faden.isRunning():
