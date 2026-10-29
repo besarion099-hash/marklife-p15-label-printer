@@ -18,8 +18,8 @@ Vor dem ersten Druck
 Ein Etikett gestalten
   Oben Größe, Papier und Dichte wählen. Links ein Werkzeug anklicken.
   Elemente mit der Maus ziehen; die acht Quadrate an Ecken und Seiten
-  (oder die Kanten selbst) ändern
-  die Größe. Rechts stehen die Felder des gewählten Elements.
+  (oder die Kanten selbst) ändern die Größe. Rechts stehen die Felder
+  des gewählten Elements.
   Entf löscht das gewählte Element.
 
   Rahmen und Linien: Links "Rahmen …" oder "Linie …" anklicken. Es
