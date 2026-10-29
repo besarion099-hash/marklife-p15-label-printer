@@ -94,10 +94,14 @@ def main() -> int:
     from PySide6.QtGui import QIcon
     from PySide6.QtWidgets import QApplication
 
+    from gui import aussehen
     from gui.fenster import Hauptfenster
+    from gui.ueber import VERSION
     app = QApplication(sys.argv)
     app.setApplicationName("Etikettendrucker")
+    app.setApplicationVersion(VERSION)
     app.setWindowIcon(QIcon(str(SYMBOL)))
+    aussehen.anwenden(app)
     fenster = Hauptfenster()
     fenster.show()
     return app.exec()

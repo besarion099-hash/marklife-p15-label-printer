@@ -5,13 +5,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (QFileDialog, QInputDialog, QMainWindow, QMessageBox, QScrollArea,
                                QSplitter, QToolBar, QVBoxLayout, QWidget)
 
 from gui.arbeiter import im_hintergrund
 from gui.aufkleber import AufkleberDialog, als_png
+from gui.aussehen import werkzeug_symbol
 from kern import aufkleber as ak
 from gui.bilder import bild_lesen, startordner
 from gui.druckleiste import Druckleiste
@@ -19,6 +20,7 @@ from gui.eigenschaften import Eigenschaften
 from gui.formen import form_waehlen
 from gui.flaeche import Flaeche
 from gui.seriendruck import SerienDialog
+from gui.ueber import ueber_zeigen
 from kern import anschluss, druck, einstellungen, stile
 from kern import etikett as et
 
@@ -57,9 +59,10 @@ class Hauptfenster(QMainWindow):
 
     def _aufbauen(self):
         werkzeuge = QToolBar("Werkzeuge")
-        werkzeuge.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
+        werkzeuge.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        werkzeuge.setIconSize(QSize(26, 26))
         for art, text in WERKZEUGE:
-            aktion = QAction(text, self)
+            aktion = QAction(werkzeug_symbol(art), text, self)
             aktion.triggered.connect(lambda *_, a=art: self._werkzeug(a))
             werkzeuge.addAction(aktion)
         self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, werkzeuge)
@@ -100,6 +103,9 @@ class Hauptfenster(QMainWindow):
         self._eintrag(drucker, "&Ausrichtung testen …", self.ausrichtung_testen)
         self._eintrag(drucker, "&Lage feinjustieren …", self.lage_feinjustieren)
         self._eintrag(drucker, "Drucker &neu suchen", self.leiste.ports_neu)
+        ueber = QAction("Ü&ber", self)        # direkt in der Leiste, ohne Untermenue
+        ueber.triggered.connect(lambda *_: self.ueber())
+        self.menuBar().addAction(ueber)
 
     def _eintrag(self, menue, text, funktion, kurz=None):
         aktion = QAction(text, self)
@@ -262,6 +268,9 @@ class Hauptfenster(QMainWindow):
             self.e.versatz_mm = wert
             self._einstellungen_sichern()
             self.statusBar().showMessage(f"Versatz {wert:+.1f} mm gespeichert.", 8000)
+
+    def ueber(self):
+        ueber_zeigen(self)
 
     def _im_hintergrund(self, aufgabe, was, danach=None):
         if self._faden is not None and self._faden.isRunning():

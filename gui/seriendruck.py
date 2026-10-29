@@ -47,6 +47,7 @@ class SerienDialog(QDialog):
         self.kopien.setRange(1, 99)
         self.balken = QProgressBar()
         self.drucken_knopf = QPushButton("Drucken")
+        self.drucken_knopf.setObjectName("haupt")
         self.drucken_knopf.setEnabled(False)
         self.abbrechen_knopf = QPushButton("Abbrechen")
         self.abbrechen_knopf.setEnabled(False)

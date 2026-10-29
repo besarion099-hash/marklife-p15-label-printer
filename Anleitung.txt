@@ -30,6 +30,8 @@ Ein Etikett gestalten
   sind für den Thermodruck ausgelegt (Striche mindestens 0,25 mm,
   keine Vollflächen).
 
+  Version und Urheber: Menü "Über" ganz oben in der Menüleiste.
+
   Rahmenfarben: blau = gewählt, orange = ragt über den Rand und wird
   abgeschnitten, rot = lässt sich nicht drucken (z. B. QR-Code zu klein).
 

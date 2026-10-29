@@ -30,6 +30,7 @@ class Druckleiste(QWidget):
         neu = QToolButton()
         neu.setText("↻")
         neu.setToolTip("Drucker neu suchen")
+        neu.setObjectName("klein")
         self.groesse = QComboBox()
         for name, _, _ in GROESSEN:
             self.groesse.addItem(name)
@@ -41,6 +42,7 @@ class Druckleiste(QWidget):
         self.kopien = QSpinBox()
         self.kopien.setRange(1, 99)
         self.knopf = QPushButton("Drucken")
+        self.knopf.setObjectName("haupt")          # dunkel, wie die Front des P15
 
         zeile = QHBoxLayout(self)
         zeile.setContentsMargins(6, 4, 6, 4)

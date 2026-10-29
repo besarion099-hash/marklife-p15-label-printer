@@ -121,3 +121,24 @@ def test_galerie_zeigt_alle_formen(qapp):
     assert dialog.raster.currentItem().text() == "Welle"
     dialog._gewaehlt(dialog.raster.item(3))
     assert dialog.gewaehlt == stile.LINIENSTILE[3][0]
+
+
+def test_menue_ueber_zeigt_version_und_autor(qapp, tmp_path, monkeypatch):
+    from gui import fenster as modul
+    from gui.ueber import text
+    gezeigt = []
+    monkeypatch.setattr(modul, "ueber_zeigen", lambda eltern: gezeigt.append(eltern))
+    fenster = _fenster(tmp_path)
+    ueber = [a for a in fenster.menuBar().actions() if a.text().replace("&", "") == "Über"]
+    assert len(ueber) == 1 and ueber[0].menu() is None      # direkt anklickbar
+    ueber[0].trigger()
+    assert gezeigt == [fenster]
+    assert "1.0" in text() and "Besarion" in text() and "29.10.2026" in text()
+
+
+def test_werkzeuge_haben_symbole(qapp, tmp_path):
+    from PySide6.QtWidgets import QToolBar
+    fenster = _fenster(tmp_path)
+    leiste = fenster.findChild(QToolBar)
+    assert all(not a.icon().isNull() for a in leiste.actions())
+    assert fenster.leiste.knopf.objectName() == "haupt"
