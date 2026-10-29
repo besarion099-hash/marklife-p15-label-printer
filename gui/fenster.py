@@ -16,15 +16,16 @@ from kern import aufkleber as ak
 from gui.bilder import bild_lesen, startordner
 from gui.druckleiste import Druckleiste
 from gui.eigenschaften import Eigenschaften
+from gui.formen import form_waehlen
 from gui.flaeche import Flaeche
 from gui.seriendruck import SerienDialog
-from kern import anschluss, druck, einstellungen
+from kern import anschluss, druck, einstellungen, stile
 from kern import etikett as et
 
 FILTER = "Etikett-Vorlagen (*.etikett.json)"
 BILDER = "Bilder (*.png *.jpg *.jpeg *.bmp *.gif)"
 WERKZEUGE = [("text", "Text"), ("qr", "QR-Code"), ("barcode", "Barcode"), ("bild", "Bild …"),
-             ("aufkleber", "Aufkleber …"), ("rahmen", "Rahmen"), ("linie", "Linie")]
+             ("aufkleber", "Aufkleber …"), ("rahmen", "Rahmen …"), ("linie", "Linie …")]
 
 
 class Hauptfenster(QMainWindow):
@@ -38,6 +39,7 @@ class Hauptfenster(QMainWindow):
         self._faden = self._arbeiter = None
         self._katalog = None             # Aufkleber, erst beim ersten Oeffnen eingelesen
         self.melden = lambda titel, text: QMessageBox.warning(self, titel, text)
+        self.form_waehlen = form_waehlen   # Galerie fuer Rahmen/Linie, im Test ersetzbar
         self.leiste = Druckleiste(self.e, port_quelle)
         self.flaeche = Flaeche()
         self.flaeche.rand_ende_mm = self.e.rand_ende_mm
@@ -58,7 +60,7 @@ class Hauptfenster(QMainWindow):
         werkzeuge.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
         for art, text in WERKZEUGE:
             aktion = QAction(text, self)
-            aktion.triggered.connect(lambda *_, a=art: self.neues_element(a))
+            aktion.triggered.connect(lambda *_, a=art: self._werkzeug(a))
             werkzeuge.addAction(aktion)
         self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, werkzeuge)
         rechts = QScrollArea()
@@ -116,7 +118,16 @@ class Hauptfenster(QMainWindow):
             self.flaeche.neu_zeichnen()
         self._einstellungen_sichern()
 
-    def neues_element(self, art):
+    def _werkzeug(self, art):
+        if art in ("rahmen", "linie"):
+            stil = self.form_waehlen(art, None, self)
+            if stil is None:
+                return
+            self.neues_element(art, stil)
+        else:
+            self.neues_element(art)
+
+    def neues_element(self, art, stil=None):
         b = self.etikett.breite_mm - self.e.rand_ende_mm      # nur der bedruckbare Teil
         h = self.etikett.hoehe_mm
         if art == "text":
@@ -137,9 +148,12 @@ class Hauptfenster(QMainWindow):
             if element is None:
                 return
         elif art == "rahmen":
-            element = et.Rahmen(x_mm=0, y_mm=0, breite_mm=b, hoehe_mm=h)
+            element = et.Rahmen(x_mm=0, y_mm=0, breite_mm=b, hoehe_mm=h, stil=stil or "einfach")
         else:
-            element = et.Linie(x_mm=1, y_mm=h / 2 - 0.5, breite_mm=b - 2, hoehe_mm=1)
+            stil = stil or "durchgezogen"
+            dicke = min(h, stile.LINIE_HOEHE_MM.get(stil, 1.0))
+            element = et.Linie(x_mm=1, y_mm=(h - dicke) / 2, breite_mm=b - 2, hoehe_mm=dicke,
+                               stil=stil)
         self.etikett.elemente.append(element)
         self.flaeche.neu_zeichnen()
         self.flaeche.waehle(len(self.etikett.elemente) - 1)

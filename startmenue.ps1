@@ -1,4 +1,5 @@
-# Legt im Startmenue den Eintrag "Etikettendrucker" an.
+# Legt im Startmenue und auf dem Desktop die Verknuepfung "Etikettendrucker"
+# an, beide mit dem Programmsymbol gui\symbol.ico.
 #
 # Er startet die Basis-Python aus venv\pyvenv.cfg (Eintrag "home") direkt,
 # nicht venv\Scripts\python.exe: Der venv-Starter ist unter Windows nur ein
@@ -21,12 +22,16 @@ foreach ($schluessel in 'executable', 'home') {
 }
 if (-not $basis) { Write-Host 'Keine Basis-Python in venv\pyvenv.cfg - erst install.bat ausfuehren.'; exit 1 }
 
-$ziel = Join-Path ([Environment]::GetFolderPath('Programs')) 'Etikettendrucker.lnk'
-$verknuepfung = (New-Object -ComObject WScript.Shell).CreateShortcut($ziel)
-$verknuepfung.TargetPath = $basis
-$verknuepfung.Arguments = '"' + (Join-Path $hier 'gui\app.py') + '"'
-$verknuepfung.WorkingDirectory = $hier
-$verknuepfung.WindowStyle = 7          # minimiert; die App blendet die Konsole selbst aus
-$verknuepfung.Description = 'Etiketten gestalten und auf dem Marklife P15 drucken'
-$verknuepfung.Save()
-Write-Host "Startmenue-Eintrag angelegt: $ziel"
+$symbol = Join-Path $hier 'gui\symbol.ico'
+foreach ($ordner in 'Programs', 'Desktop') {
+    $ziel = Join-Path ([Environment]::GetFolderPath($ordner)) 'Etikettendrucker.lnk'
+    $verknuepfung = (New-Object -ComObject WScript.Shell).CreateShortcut($ziel)
+    $verknuepfung.TargetPath = $basis
+    $verknuepfung.Arguments = '"' + (Join-Path $hier 'gui\app.py') + '"'
+    $verknuepfung.WorkingDirectory = $hier
+    $verknuepfung.WindowStyle = 7          # minimiert; die App blendet die Konsole selbst aus
+    $verknuepfung.Description = 'Etiketten gestalten und auf dem Marklife P15 drucken'
+    if (Test-Path $symbol) { $verknuepfung.IconLocation = "$symbol,0" }
+    $verknuepfung.Save()
+    Write-Host "Verknuepfung angelegt: $ziel"
+}

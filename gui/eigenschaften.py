@@ -8,13 +8,16 @@ neu.
 
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import QSize, Signal
+from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QDoubleSpinBox, QFileDialog, QFormLayout,
                                QLabel, QLineEdit, QPlainTextEdit, QPushButton, QVBoxLayout,
                                QWidget)
 
+from gui import formen
 from gui.bilder import bild_lesen
 from kern.etikett import Barcode, Bild, Linie, QRCode, Rahmen, Text
+from kern import stile
 from kern.stile import LINIENSTILE, RAHMENSTILE
 from kern.zeichnen import SCHRIFTEN
 
@@ -35,6 +38,7 @@ class Eigenschaften(QWidget):
         super().__init__(eltern)
         self.element = None
         self.felder = {}
+        self.form_waehlen = formen.form_waehlen     # im Test ersetzbar
         self._aussen = QVBoxLayout(self)
         self._aussen.addStretch(1)
         self._inhalt = None
@@ -84,11 +88,11 @@ class Eigenschaften(QWidget):
             knopf.clicked.connect(self._bild_waehlen)
             form.addRow(knopf)
         elif isinstance(element, Rahmen):
-            self._auswahl(form, "stil", "Stil", RAHMENSTILE)
+            self._form(form, "rahmen", RAHMENSTILE)
             self._zahl(form, "strich_mm", "Strich (mm)", 0.25, 5)
             self._zahl(form, "ecken_mm", "Ecken (mm)", 0, 20)
         elif isinstance(element, Linie):
-            self._auswahl(form, "stil", "Stil", LINIENSTILE)
+            self._form(form, "linie", LINIENSTILE)
             self._zahl(form, "strich_mm", "Strich (mm)", 0.25, 5)
 
     def _setzen(self, name, wert):
@@ -134,6 +138,28 @@ class Eigenschaften(QWidget):
             lambda i, n=name, f=feld: self._setzen(n, f.itemData(i)))
         form.addRow(beschriftung, feld)
         self.felder[name] = feld
+
+    def _form(self, form, art, moeglich):
+        """Knopf mit Vorschau der aktuellen Form; Klick oeffnet die Galerie."""
+        namen = dict(moeglich)
+        knopf = QPushButton(namen.get(self.element.stil, self.element.stil) + " …")
+        knopf.setIcon(QIcon(QPixmap.fromImage(formen.vorschau(art, self.element.stil))))
+        knopf.setIconSize(QSize(72, 24))
+        knopf.setToolTip("Andere Form aus der Galerie wählen")
+
+        def waehlen():
+            stil = self.form_waehlen(art, self.element.stil, self)
+            if stil is not None and stil != self.element.stil:
+                if art == "linie":                    # Zierlinien brauchen Hoehe
+                    soll = stile.LINIE_HOEHE_MM.get(stil, 1.0)
+                    if self.element.hoehe_mm < soll:
+                        self.element.y_mm -= (soll - self.element.hoehe_mm) / 2
+                        self.element.hoehe_mm = soll
+                self._setzen("stil", stil)
+                self.zeige(self.element)              # Knopf mit neuer Vorschau
+        knopf.clicked.connect(waehlen)
+        form.addRow("Form", knopf)
+        self.felder["stil"] = knopf
 
     def aktualisieren(self):
         """Lage und Groesse nach dem Ziehen nachfuehren, ohne neu aufzubauen."""

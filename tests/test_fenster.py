@@ -97,3 +97,27 @@ def test_startordner_ist_dokumente_ohne_letzten_ordner(tmp_path):
     assert startordner(Einstellungen()) == str(Path.home() / "Documents")
     assert startordner(Einstellungen(letzter_ordner=str(tmp_path))) == str(tmp_path)
     assert startordner(Einstellungen(letzter_ordner=str(tmp_path / "weg"))) == str(Path.home() / "Documents")
+
+
+def test_werkzeug_rahmen_und_linie_fragen_die_form(qapp, tmp_path):
+    from gui.fenster import Hauptfenster
+    fenster = Hauptfenster(einstellungen_pfad=tmp_path / "e.json", port_quelle=lambda: [])
+    antworten = iter(["briefmarke", "ranke", None])
+    fenster.form_waehlen = lambda art, jetzt, eltern: next(antworten)
+    fenster._werkzeug("rahmen")
+    fenster._werkzeug("linie")
+    fenster._werkzeug("linie")                                  # abgebrochen: nichts neu
+    rahmen, linie = fenster.etikett.elemente
+    assert rahmen.stil == "briefmarke"
+    assert linie.stil == "ranke" and linie.hoehe_mm == 4.0      # Zierlinie bekommt Platz
+    assert abs(linie.y_mm + linie.hoehe_mm / 2 - fenster.etikett.hoehe_mm / 2) < 1e-9
+
+
+def test_galerie_zeigt_alle_formen(qapp):
+    from gui.formen import FormenDialog
+    from kern import stile
+    dialog = FormenDialog("linie", jetzt="welle")
+    assert dialog.raster.count() == len(stile.LINIENSTILE)
+    assert dialog.raster.currentItem().text() == "Welle"
+    dialog._gewaehlt(dialog.raster.item(3))
+    assert dialog.gewaehlt == stile.LINIENSTILE[3][0]

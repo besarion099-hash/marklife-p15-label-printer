@@ -11,6 +11,8 @@ WURZEL = Path(__file__).resolve().parent.parent
 if str(WURZEL) not in sys.path:
     sys.path.insert(0, str(WURZEL))
 LOG = WURZEL / "lauf.log"
+SYMBOL = WURZEL / "gui" / "symbol.ico"
+APP_ID = "Marklife.Etikettendrucker"
 
 
 def venv_einbinden():
@@ -58,6 +60,18 @@ def konsole_verstecken():
         pass                                                  # Komfort, kein Muss
 
 
+def eigene_app_id():
+    """Eigene AppUserModelID (nur Windows): sonst gruppiert die Taskleiste das
+    Fenster unter python.exe und zeigt dessen Symbol statt unseres."""
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
+    except Exception:
+        pass                                                  # Komfort, kein Muss
+
+
 def _absturz_melden(art, wert, verlauf):
     text = "".join(traceback.format_exception(art, wert, verlauf))
     try:
@@ -75,12 +89,15 @@ def _absturz_melden(art, wert, verlauf):
 
 def main() -> int:
     konsole_verstecken()
+    eigene_app_id()
     sys.excepthook = _absturz_melden
+    from PySide6.QtGui import QIcon
     from PySide6.QtWidgets import QApplication
 
     from gui.fenster import Hauptfenster
     app = QApplication(sys.argv)
     app.setApplicationName("Etikettendrucker")
+    app.setWindowIcon(QIcon(str(SYMBOL)))
     fenster = Hauptfenster()
     fenster.show()
     return app.exec()

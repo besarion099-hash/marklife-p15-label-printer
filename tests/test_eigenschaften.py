@@ -57,17 +57,23 @@ def test_nichts_gewaehlt(qapp):
     assert leiste.felder == {} and leiste.element is None
 
 
-def test_stilauswahl_fuer_rahmen_und_linie(qapp):
+def test_formknopf_oeffnet_galerie_fuer_rahmen_und_linie(qapp):
     from kern.etikett import Linie
     leiste, gemeldet = _leiste()
+    gefragt = []
+    leiste.form_waehlen = lambda art, jetzt, eltern: gefragt.append((art, jetzt)) or "wellen"
     rahmen = Rahmen()
     leiste.zeige(rahmen)
-    feld = leiste.felder["stil"]
-    feld.setCurrentIndex(feld.findData("wellen"))
+    leiste.felder["stil"].click()
+    assert gefragt == [("rahmen", "einfach")]
     assert rahmen.stil == "wellen" and gemeldet
+    assert "Wellenrand" in leiste.felder["stil"].text()        # Knopf zeigt die neue Form
     linie = Linie()
     leiste.zeige(linie)
-    feld = leiste.felder["stil"]
-    assert feld.count() == 8
-    feld.setCurrentIndex(feld.findData("ornament"))
-    assert linie.stil == "ornament"
+    leiste.form_waehlen = lambda art, jetzt, eltern: None          # abgebrochen
+    leiste.felder["stil"].click()
+    assert linie.stil == "durchgezogen"
+    linie.y_mm, linie.hoehe_mm = 5.5, 1.0
+    leiste.form_waehlen = lambda art, jetzt, eltern: "ranke"       # braucht 4 mm
+    leiste.felder["stil"].click()
+    assert (linie.stil, linie.y_mm, linie.hoehe_mm) == ("ranke", 4.0, 4.0)

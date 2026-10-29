@@ -6,7 +6,8 @@ Einrichten (einmalig)
   2. Den Drucker einschalten und in Windows koppeln:
      Einstellungen > Bluetooth und Geräte > Gerät hinzufügen > P15_...
      (nicht den Eintrag mit _BLE am Ende).
-  3. Starten mit Etikettendrucker.bat.
+  3. Starten über die Verknüpfung "Etikettendrucker" auf dem Desktop
+     oder im Startmenü (oder mit Etikettendrucker.bat).
 
 Vor dem ersten Druck
   Menü Drucker > Ausrichtung testen. Es kommen vier Etiketten heraus.
@@ -18,6 +19,14 @@ Ein Etikett gestalten
   Elemente mit der Maus ziehen; das kleine Quadrat unten rechts ändert
   die Größe. Rechts stehen die Felder des gewählten Elements.
   Entf löscht das gewählte Element.
+
+  Rahmen und Linien: Links "Rahmen …" oder "Linie …" anklicken. Es
+  öffnet sich eine Galerie mit je rund 30 Formen (doppelt, oval,
+  Art déco, Schnörkel, Briefmarke, Perlen, Sterne, Blattranke, Mäander
+  ...). Ein Klick setzt die Form aufs Etikett. Die Form eines gewählten
+  Rahmens oder einer Linie ändert rechts der Knopf "Form". Alle Formen
+  sind für den Thermodruck ausgelegt (Striche mindestens 0,25 mm,
+  keine Vollflächen).
 
   Rahmenfarben: blau = gewählt, orange = ragt über den Rand und wird
   abgeschnitten, rot = lässt sich nicht drucken (z. B. QR-Code zu klein).

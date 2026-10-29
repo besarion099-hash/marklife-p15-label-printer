@@ -28,7 +28,7 @@ echo Erstelle venv ...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%HIER%startmenue.ps1"
 
 echo.
-echo Fertig. Starte das Programm ueber das Startmenue ("Etikettendrucker")
+echo Fertig. Starte das Programm ueber das Startmenue oder den Desktop ("Etikettendrucker")
 echo oder mit "Etikettendrucker.bat".
 echo.
 pause

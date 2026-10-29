@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
-from PIL import Image, ImageOps
+from PIL import ImageOps
 
 from kern import etikett as et
 from kern import stile, zeichnen
@@ -12,7 +12,7 @@ def _bild(element):
 
 
 def _schwarze_punkte(bild):
-    return sum(1 for x in range(bild.width) for y in range(bild.height) if bild.getpixel((x, y)) == 0)
+    return bild.histogram()[0]
 
 
 @pytest.mark.parametrize("stil", [s for s, _ in stile.RAHMENSTILE])
@@ -73,3 +73,36 @@ def test_unbekannter_stil_zeichnet_einfach():
     einfach = _bild(Rahmen(stil="einfach"))
     unbekannt = _bild(Rahmen(stil="gibtsnicht"))
     assert einfach.tobytes() == unbekannt.tobytes()
+
+
+def test_je_rund_dreissig_formen_mit_eindeutigen_namen():
+    for liste in (stile.RAHMENSTILE, stile.LINIENSTILE):
+        namen = [name for name, _ in liste]
+        assert len(namen) >= 30 and len(set(namen)) == len(namen)
+    # Namen frueherer Fassungen bleiben gueltig, damit alte Vorlagen gleich aussehen
+    alt_r = {"einfach", "doppelt", "dick-duenn", "gestrichelt", "gepunktet", "wellen", "ecken",
+             "ticket"}
+    alt_l = {"durchgezogen", "doppelt", "gestrichelt", "gepunktet", "strich-punkt", "welle",
+             "zickzack", "ornament"}
+    assert alt_r <= {n for n, _ in stile.RAHMENSTILE}
+    assert alt_l <= {n for n, _ in stile.LINIENSTILE}
+
+
+@pytest.mark.parametrize("stil", [s for s, _ in stile.LINIENSTILE])
+def test_zierlinie_in_einfuegehoehe_ohne_vollflaeche(stil):
+    hoehe = stile.LINIE_HOEHE_MM[stil]
+    bild = _bild(Linie(x_mm=0, y_mm=0, breite_mm=36, hoehe_mm=hoehe, stil=stil))
+    streifen = bild.crop((0, 0, 288, round(hoehe * 8)))
+    assert 0 < _schwarze_punkte(streifen) < 0.7 * streifen.width * streifen.height, stil
+
+
+@pytest.mark.parametrize("stil", [s for s, _ in stile.RAHMENSTILE])
+def test_rahmen_klein_und_mit_dickem_strich_stuerzt_nicht(stil):
+    for breite, hoehe, strich in ((4, 3, 0.25), (36, 12, 2.0), (1, 1, 0.5)):
+        _bild(Rahmen(x_mm=0, y_mm=0, breite_mm=breite, hoehe_mm=hoehe, strich_mm=strich, stil=stil))
+
+
+@pytest.mark.parametrize("stil", [s for s, _ in stile.LINIENSTILE])
+def test_linie_klein_und_mit_dickem_strich_stuerzt_nicht(stil):
+    for breite, hoehe, strich in ((4, 0.5, 0.25), (36, 4, 2.0), (1, 0.25, 0.5)):
+        _bild(Linie(x_mm=0, y_mm=0, breite_mm=breite, hoehe_mm=hoehe, strich_mm=strich, stil=stil))
