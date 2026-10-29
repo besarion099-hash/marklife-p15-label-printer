@@ -5,8 +5,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtGui import QAction, QActionGroup, QKeySequence
 from PySide6.QtWidgets import (QFileDialog, QInputDialog, QMainWindow, QMessageBox, QScrollArea,
                                QSplitter, QToolBar, QVBoxLayout, QWidget)
 
@@ -22,16 +22,21 @@ from gui.formen import form_waehlen
 from gui.flaeche import Flaeche
 from gui.seriendruck import SerienDialog
 from gui.ueber import ueber_zeigen
-from kern import anschluss, druck, einstellungen, stile
+from kern import anschluss, druck, einstellungen, sprache, stile
 from kern import etikett as et
+from kern.sprache import N_, t
 
-FILTER = "Etikett-Vorlagen (*.etikett.json)"
-BILDER = "Bilder (*.png *.jpg *.jpeg *.bmp *.gif)"
-WERKZEUGE = [("text", "Text"), ("qr", "QR-Code"), ("barcode", "Barcode"), ("bild", "Bild …"),
-             ("aufkleber", "Aufkleber …"), ("rahmen", "Rahmen …"), ("linie", "Linie …")]
+FILTER = N_("Etikett-Vorlagen (*.etikett.json)")
+BILDER = N_("Bilder (*.png *.jpg *.jpeg *.bmp *.gif)")
+WERKZEUGE = [("text", N_("Text")), ("qr", N_("QR-Code")), ("barcode", N_("Barcode")),
+             ("bild", N_("Bild …")), ("aufkleber", N_("Aufkleber …")),
+             ("rahmen", N_("Rahmen …")), ("linie", N_("Linie …"))]
+SPRACHMENUE = "Sprache / &Language"      # in beiden Sprachen, damit man es immer findet
 
 
 class Hauptfenster(QMainWindow):
+    sprache_gewechselt = Signal()
+
     def __init__(self, einstellungen_pfad=einstellungen.STANDARD_PFAD,
                  port_quelle=anschluss.ports, verbinden=anschluss.Verbindung):
         super().__init__()
@@ -62,15 +67,15 @@ class Hauptfenster(QMainWindow):
         return self.flaeche.etikett
 
     def _aufbauen(self):
-        werkzeuge = QToolBar("Werkzeuge")
+        werkzeuge = QToolBar(t("Werkzeuge"))
         werkzeuge.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         werkzeuge.setIconSize(QSize(26, 26))
         for art, text in WERKZEUGE:
-            aktion = QAction(werkzeug_symbol(art), text, self)
+            aktion = QAction(werkzeug_symbol(art), t(text), self)
             aktion.triggered.connect(lambda *_, a=art: self._werkzeug(a))
             werkzeuge.addAction(aktion)
         werkzeuge.addSeparator()
-        serie = QAction(werkzeug_symbol("serie"), "Serien-Druck …", self)
+        serie = QAction(werkzeug_symbol("serie"), t("Serien-Druck …"), self)
         serie.triggered.connect(lambda *_: self.serien_druck())
         werkzeuge.addAction(serie)
         self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, werkzeuge)
@@ -97,23 +102,31 @@ class Hauptfenster(QMainWindow):
         self.leiste.drucken.connect(self.drucken)
 
     def _menue(self):
-        datei = self.menuBar().addMenu("&Datei")
-        self._eintrag(datei, "&Neu", self.neu, QKeySequence.StandardKey.New)
-        self._eintrag(datei, "Ö&ffnen …", self.oeffnen, QKeySequence.StandardKey.Open)
-        self._eintrag(datei, "&Speichern", self.speichern, QKeySequence.StandardKey.Save)
-        self._eintrag(datei, "Speichern &unter …", self.speichern_unter,
+        datei = self.menuBar().addMenu(t("&Datei"))
+        self._eintrag(datei, t("&Neu"), self.neu, QKeySequence.StandardKey.New)
+        self._eintrag(datei, t("Ö&ffnen …"), self.oeffnen, QKeySequence.StandardKey.Open)
+        self._eintrag(datei, t("&Speichern"), self.speichern, QKeySequence.StandardKey.Save)
+        self._eintrag(datei, t("Speichern &unter …"), self.speichern_unter,
                       QKeySequence.StandardKey.SaveAs)
         datei.addSeparator()
-        self._eintrag(datei, "Se&rien-Druck …", self.serien_druck)
+        self._eintrag(datei, t("Se&rien-Druck …"), self.serien_druck)
         datei.addSeparator()
-        self._eintrag(datei, "&Beenden", self.close)
-        drucker = self.menuBar().addMenu("D&rucker")
-        self._eintrag(drucker, "&Einrichten (Bluetooth, Windows-Drucker) …", self.einrichten)
+        self._eintrag(datei, t("&Beenden"), self.close)
+        drucker = self.menuBar().addMenu(t("D&rucker"))
+        self._eintrag(drucker, t("&Einrichten (Bluetooth, Windows-Drucker) …"), self.einrichten)
         drucker.addSeparator()
-        self._eintrag(drucker, "&Ausrichtung testen …", self.ausrichtung_testen)
-        self._eintrag(drucker, "&Lage feinjustieren …", self.lage_feinjustieren)
-        self._eintrag(drucker, "Drucker &neu suchen", self.leiste.ports_neu)
-        ueber = QAction("Ü&ber", self)        # direkt in der Leiste, ohne Untermenue
+        self._eintrag(drucker, t("&Ausrichtung testen …"), self.ausrichtung_testen)
+        self._eintrag(drucker, t("&Lage feinjustieren …"), self.lage_feinjustieren)
+        self._eintrag(drucker, t("Drucker &neu suchen"), self.leiste.ports_neu)
+        wahl = self.menuBar().addMenu(SPRACHMENUE)
+        gruppe = QActionGroup(self)
+        for code, name in sprache.SPRACHEN:
+            aktion = QAction(name, self, checkable=True)
+            aktion.setChecked(code == sprache.aktuell())
+            aktion.triggered.connect(lambda *_, c=code: self.sprache_waehlen(c))
+            gruppe.addAction(aktion)
+            wahl.addAction(aktion)
+        ueber = QAction(t("Ü&ber"), self)        # direkt in der Leiste, ohne Untermenue
         ueber.triggered.connect(lambda *_: self.ueber())
         self.menuBar().addAction(ueber)
 
@@ -154,7 +167,8 @@ class Hauptfenster(QMainWindow):
         elif art == "barcode":
             element = et.Barcode(x_mm=1, y_mm=1, breite_mm=b - 2, hoehe_mm=h - 2)
         elif art == "bild":
-            pfad, _ = QFileDialog.getOpenFileName(self, "Bild wählen", startordner(self.e), BILDER)
+            pfad, _ = QFileDialog.getOpenFileName(self, t("Bild wählen"), startordner(self.e),
+                                                  t(BILDER))
             daten = bild_lesen(pfad, self) if pfad else None
             if daten is None:
                 return
@@ -187,14 +201,15 @@ class Hauptfenster(QMainWindow):
 
     def neu(self):
         if self.etikett.elemente and QMessageBox.question(
-                self, "Neu", "Das aktuelle Etikett verwerfen?") != QMessageBox.StandardButton.Yes:
+                self, t("Neu"), t("Das aktuelle Etikett verwerfen?")) != QMessageBox.StandardButton.Yes:
             return
         self.flaeche.setze_etikett(et.Etikett(*self.leiste.groesse_mm()))
         self.pfad = None
         self._titel()
 
     def oeffnen(self):
-        pfad, _ = QFileDialog.getOpenFileName(self, "Vorlage öffnen", startordner(self.e), FILTER)
+        pfad, _ = QFileDialog.getOpenFileName(self, t("Vorlage öffnen"), startordner(self.e),
+                                              t(FILTER))
         if pfad:
             self.oeffnen_pfad(Path(pfad))
 
@@ -202,7 +217,7 @@ class Hauptfenster(QMainWindow):
         try:
             etikett = et.laden(pfad)
         except et.VorlagenFehler as fehler:
-            self.melden("Vorlage öffnen", str(fehler))
+            self.melden(t("Vorlage öffnen"), str(fehler))
             return
         self.leiste.setze_groesse(etikett.breite_mm, etikett.hoehe_mm)
         self.flaeche.setze_etikett(etikett)
@@ -217,7 +232,8 @@ class Hauptfenster(QMainWindow):
             self.speichern_pfad(self.pfad)
 
     def speichern_unter(self):
-        pfad, _ = QFileDialog.getSaveFileName(self, "Vorlage speichern", startordner(self.e), FILTER)
+        pfad, _ = QFileDialog.getSaveFileName(self, t("Vorlage speichern"), startordner(self.e),
+                                              t(FILTER))
         if not pfad:
             return
         if not pfad.endswith(".etikett.json"):
@@ -228,30 +244,30 @@ class Hauptfenster(QMainWindow):
         try:
             et.speichern(self.etikett, pfad)
         except OSError as fehler:
-            self.melden("Vorlage speichern", f"Speichern ging nicht:\n{fehler}")
+            self.melden(t("Vorlage speichern"), t("Speichern ging nicht:\n{fehler}", fehler=fehler))
             return
         self.pfad = Path(pfad)
         self.e.letzter_ordner = str(self.pfad.parent)
         self._titel()
 
     def _titel(self):
-        name = self.pfad.name if self.pfad else "neues Etikett"
-        self.setWindowTitle(f"Etikettendrucker – {name}")
+        name = self.pfad.name if self.pfad else t("neues Etikett")
+        self.setWindowTitle(t("Etikettendrucker – {name}", name=name))
 
     def drucken(self):
         self.leiste.uebernehmen()
         self._einstellungen_sichern()
         etikett, e, kopien, verbinden = self.etikett, self.e, self.leiste.kopien.value(), self._verbinden
         self._im_hintergrund(
-            lambda fort, ab: druck.drucken(etikett, [{}], kopien, e, verbinden, fort, ab), "Drucke")
+            lambda fort, ab: druck.drucken(etikett, [{}], kopien, e, verbinden, fort, ab), t("Drucke"))
 
     def ausrichtung_testen(self):
         if QMessageBox.question(
-                self, "Ausrichtung testen",
-                "Es werden zwei Etiketten gedruckt, je eines mit 90° und 270° Drehung. "
-                "(0° und 180° passen nicht: Der P15 druckt das Etikett der Länge nach, "
-                "quer ist sein Druckkopf nur 14 mm breit.) Danach fragt das Programm, "
-                "welches den Pfeil nach oben zeigt und lesbar ist.\n\nWeiter?"
+                self, t("Ausrichtung testen"),
+                t("Es werden zwei Etiketten gedruckt, je eines mit 90° und 270° Drehung. "
+                  "(0° und 180° passen nicht: Der P15 druckt das Etikett der Länge nach, "
+                  "quer ist sein Druckkopf nur 14 mm breit.) Danach fragt das Programm, "
+                  "welches den Pfeil nach oben zeigt und lesbar ist.\n\nWeiter?")
         ) != QMessageBox.StandardButton.Yes:
             return
         self.leiste.uebernehmen()
@@ -259,31 +275,50 @@ class Hauptfenster(QMainWindow):
         e, verbinden = self.e, self._verbinden
         self._im_hintergrund(
             lambda fort, ab: druck.ausrichtung_testen(e, breite, hoehe, verbinden, fort, ab),
-            "Testdruck", danach=self._ausrichtung_waehlen)
+            t("Testdruck"), danach=self._ausrichtung_waehlen)
 
     def _ausrichtung_waehlen(self):
         moeglich = [f"{grad}°" for grad in druck.TESTDREHUNGEN]
         jetzt = moeglich.index(f"{self.e.drehung_grad}°")
-        wahl, ok = QInputDialog.getItem(self, "Ausrichtung",
-                                        "Welches Etikett zeigt den Pfeil nach oben?",
+        wahl, ok = QInputDialog.getItem(self, t("Ausrichtung"),
+                                        t("Welches Etikett zeigt den Pfeil nach oben?"),
                                         moeglich, jetzt, False)
         if ok:
             self.e.drehung_grad = int(wahl.rstrip("°"))
             self._einstellungen_sichern()
-            self.statusBar().showMessage(f"Drehung {wahl} gespeichert.", 8000)
+            self.statusBar().showMessage(t("Drehung {wahl} gespeichert.", wahl=wahl), 8000)
 
     def lage_feinjustieren(self):
         wert, ok = QInputDialog.getDouble(
-            self, "Lage feinjustieren",
-            "Druck verschieben in mm (+ nach rechts, − nach links):",
+            self, t("Lage feinjustieren"),
+            t("Druck verschieben in mm (+ nach rechts, − nach links):"),
             self.e.versatz_mm, -10.0, 10.0, 1)
         if ok:
             self.e.versatz_mm = wert
             self._einstellungen_sichern()
-            self.statusBar().showMessage(f"Versatz {wert:+.1f} mm gespeichert.", 8000)
+            self.statusBar().showMessage(t("Versatz {wert} mm gespeichert.", wert=f"{wert:+.1f}"), 8000)
 
     def ueber(self):
         ueber_zeigen(self)
+
+    def sprache_waehlen(self, code):
+        """Sprache merken; app.py baut das Fenster dann in der neuen Sprache neu auf."""
+        if code == sprache.aktuell():
+            return
+        self.e.sprache = code
+        sprache.setze(code)
+        self._einstellungen_sichern()
+        self.sprache_gewechselt.emit()
+
+    def uebernehmen_von(self, alt):
+        """Etikett, Datei und Auswahl aus dem alten Fenster (Sprachwechsel)."""
+        self.leiste.setze_groesse(alt.etikett.breite_mm, alt.etikett.hoehe_mm)
+        self.flaeche.setze_etikett(alt.etikett)
+        self.flaeche.waehle(alt.flaeche.auswahl)
+        self.pfad = alt.pfad
+        self.erster_start = False
+        self._titel()
+        self.setGeometry(alt.geometry())
 
     def einrichten(self):
         assistent = self.assistent_bauen(self)
@@ -291,7 +326,8 @@ class Hauptfenster(QMainWindow):
             self.e.port = assistent.port.name
             self.leiste.ports_neu()
             self._einstellungen_sichern()
-            self.statusBar().showMessage(f"Drucker {assistent.port.beschreibung} gewählt.", 8000)
+            self.statusBar().showMessage(
+                t("Drucker {name} gewählt.", name=assistent.port.beschreibung), 8000)
 
     def erster_start_ohne_drucker(self) -> bool:
         """Noch keine Einstellungen und kein gekoppelter P15: Assistent anbieten."""
@@ -311,18 +347,19 @@ class Hauptfenster(QMainWindow):
 
         def fertig(anzahl):
             self.leiste.setze_druckt(False)
-            self.statusBar().showMessage(f"{anzahl} Etikett(en) gesendet.", 8000)
+            self.statusBar().showMessage(t("{anzahl} Etikett(en) gesendet.", anzahl=anzahl), 8000)
             if danach is not None:
                 danach()
 
         def fehler(meldung, anzahl):
             self.leiste.setze_druckt(False)
             self.statusBar().clearMessage()
-            self.melden("Drucken", f"{meldung}\n\n{anzahl} Etikett(en) waren schon gesendet.")
+            self.melden(t("Drucken"), t("{meldung}\n\n{anzahl} Etikett(en) waren schon gesendet.",
+                                          meldung=meldung, anzahl=anzahl))
 
         self._faden, self._arbeiter = im_hintergrund(
             aufgabe, self,
-            fortschritt=lambda a, g: self.statusBar().showMessage(f"{was}: {a} von {g}"),
+            fortschritt=lambda a, g: self.statusBar().showMessage(t("{was}: {a} von {g}", was=was, a=a, g=g)),
             fertig=fertig, fehler=fehler)
 
     def serien_druck(self):

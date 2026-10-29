@@ -1,73 +1,87 @@
 Etikettendrucker für den Marklife P15
 =====================================
+(English: Manual.txt)
+
+Sprache
+  Beim ersten Start fragt das Programm nach der Sprache (Deutsch oder
+  Englisch). Umstellen geht jederzeit im Menü "Sprache / Language"; das
+  Fenster baut sich dann in der neuen Sprache neu auf, das Etikett bleibt.
 
 Einrichten (einmalig)
-  1. install.bat doppelklicken. Lädt etwa 150 MB und dauert ein paar Minuten.
-  2. Den Drucker einschalten und in Windows koppeln:
-     Einstellungen > Bluetooth und Geräte > Gerät hinzufügen > P15_...
-     (nicht den Eintrag mit _BLE am Ende).
-  3. Starten über die Verknüpfung "Etikettendrucker" auf dem Desktop
+  Portable Fassung: ZIP entpacken, Etikettendrucker.exe starten. Python
+  ist nicht nötig. Warnt Windows beim ersten Start, auf "Weitere
+  Informationen" und "Trotzdem ausführen" klicken (das Programm ist nicht
+  digital signiert).
+
+  Aus dem Quellcode:
+  1. install.bat doppelklicken. Fragt nach der Sprache, lädt etwa 150 MB
+     und dauert ein paar Minuten. Braucht uv mit Python 3.11.
+  2. Starten über die Verknüpfung "Etikettendrucker" auf dem Desktop
      oder im Startmenü (oder mit Etikettendrucker.bat).
 
-Portable Fassung für andere PCs (ohne Python)
-  Im Quellordner bauen (einmalig vorher:
-  venv\Scripts\python.exe -m pip install -r requirements-bau.txt):
-     venv\Scripts\python.exe bauen.py
-  Ergebnis: dist\Etikettendrucker-<Version>-portabel.zip. Auf dem anderen
-  PC entpacken, Etikettendrucker.exe starten, P15 koppeln und oben wählen.
-  Einstellungen und eigene Aufkleber liegen dort neben der EXE.
-  Die Marklife-Aufkleber und der Windows-Treiber des Herstellers sind
-  nicht enthalten (fremde Software, darf nicht öffentlich verteilt
-  werden). Nur für eigene PCs ohne Internet: bauen.py --mit-treiber legt
-  den Treiber bei (ZIP endet auf -mit-treiber, nicht veröffentlichen).
-
 Einrichtungs-Assistent (Drucker > Einrichten)
-  Öffnet sich beim ersten Start von selbst, wenn noch kein P15
-  gekoppelt ist. Schritt 1 hilft beim Koppeln per Bluetooth und meldet,
-  sobald der P15 da ist. Schritt 2 (freiwillig) richtet den
-  Windows-Drucker "Marklife P15" mit dem Treiber des Herstellers ein,
-  zum Drucken aus Word & Co. Fehlt der Treiber, lädt der Assistent ihn
-  von marklifeprinter.com, prüft die Signatur und startet das
-  Installationsprogramm des Herstellers (einmal Administratorrechte).
+  Öffnet sich beim ersten Start von selbst, wenn noch kein P15 gekoppelt
+  ist. Schritt 1 hilft beim Koppeln per Bluetooth und meldet, sobald der
+  P15 da ist. Schritt 2 ist freiwillig: Er richtet den Windows-Drucker
+  "Marklife P15" mit dem Treiber des Herstellers ein, damit man auch aus
+  Word oder dem Browser drucken kann. Fehlt der Treiber, lädt der
+  Assistent ihn von marklifeprinter.com, prüft die Signatur und startet
+  das Installationsprogramm des Herstellers (einmal Administratorrechte).
   Das Programm selbst braucht den Treiber nicht.
 
+  Von Hand koppeln: Einstellungen > Bluetooth und Geräte > Gerät
+  hinzufügen > P15_... (nicht den Eintrag mit _BLE am Ende).
+
 Vor dem ersten Druck
-  Menü Drucker > Ausrichtung testen. Es kommen zwei Etiketten heraus
-  (90° und 270°; der P15 druckt der Länge nach, 0° und 180° passen nicht).
-  Das Etikett nehmen, auf dem der Pfeil nach oben zeigt und der Text
-  lesbar ist, und dessen Gradzahl auswählen. Das Programm merkt sie sich.
+  Die Vorgaben passen für Etiketten 40 x 12 mm (Drehung 90°, Rand 1 mm,
+  Versatz 1 mm). Druckt der P15 schief oder auf dem Kopf: Drucker >
+  Ausrichtung testen. Es kommen zwei Etiketten heraus (90° und 270°; der
+  P15 druckt der Länge nach, 0° und 180° passen nicht). Das Etikett
+  nehmen, auf dem der Pfeil nach oben zeigt, und dessen Gradzahl wählen.
+  Sitzt der Druck nicht mittig: Drucker > Lage feinjustieren.
 
 Ein Etikett gestalten
   Oben Größe, Papier und Dichte wählen. Links ein Werkzeug anklicken.
   Elemente mit der Maus ziehen; die acht Quadrate an Ecken und Seiten
   (oder die Kanten selbst) ändern die Größe. Rechts stehen die Felder
-  des gewählten Elements.
-  Entf löscht das gewählte Element.
+  des gewählten Elements. Entf löscht das gewählte Element.
 
   Rahmen und Linien: Links "Rahmen …" oder "Linie …" anklicken. Es
-  öffnet sich eine Galerie mit je rund 50 Formen (doppelt, oval,
-  Art déco, Schnörkel, Briefmarke, Perlen, Sterne, Mäander; dazu Pflanzen:
-  Lorbeerkranz, Blätterkante, Blüten, Ranken, Blumenwiese, Gras; Natur:
-  Pilze, Tulpen, Gänseblümchen, Lavendel, Rosmarin, Blätter, Berge, Tannen
-  ...). Ein Klick setzt die Form aufs Etikett. Die Form eines gewählten
-  Rahmens oder einer Linie ändert rechts der Knopf "Form". Alle Formen
-  sind für den Thermodruck ausgelegt (Striche mindestens 0,25 mm,
-  keine Vollflächen).
+  öffnet sich eine Galerie mit je rund 50 Formen, von schlichten Rahmen
+  über Art déco und Schnörkel bis zu Pflanzen und Natur (Lorbeerkranz,
+  Blumenwiese, Pilze, Tulpen, Lavendel, Berge, Tannen). Ein Klick setzt
+  die Form aufs Etikett; rechts wechselt der Knopf "Form" sie später.
+  Alle Formen sind für den Thermodruck ausgelegt (Striche mindestens
+  0,25 mm, keine Vollflächen).
 
-  Version und Urheber: Menü "Über" ganz oben in der Menüleiste.
+  Bilder werden beim Einfügen mit Fehlerverteilung umgewandelt (gut für
+  Fotos). Für Logos und Grafiken rechts "Umwandlung" auf "Schwelle"
+  stellen.
 
   Rahmenfarben: blau = gewählt, orange = ragt über den Rand und wird
   abgeschnitten, rot = lässt sich nicht drucken (z. B. QR-Code zu klein).
 
+Aufkleber
+  Links "Aufkleber" anklicken. Kategorien wie in der Marklife-App
+  (Blumenladen-Geschenk, Schmuck, Pflanze, Zahlen, Sport, Wetter ...),
+  oben eine Suche mit englischen Stichwörtern (heart, flower, cake).
+  Ein Klick setzt den Aufkleber aufs Etikett; danach wie ein Bild
+  verschieben und in der Größe ändern.
+  Grafiken: die freie Sammlung Tabler Icons (MIT-Lizenz) und eigene
+  Bilder. Eigene PNG/SVG in den Ordner aufkleber\eigene legen;
+  Unterordner werden zu eigenen Kategorien.
+
 Serien-Druck
   In Text, QR-Code oder Barcode {{Spaltenname}} schreiben, zum Beispiel
-  {{Name}}. Dann Datei > Serien-Druck, Tabelle wählen (CSV oder Excel,
-  erste Zeile = Spaltennamen). Rot markierte Zeilen heißen: Ein
-  Platzhalter hat keine passende Spalte.
+  {{Name}}. Dann links "Serien-Druck" (oder Datei > Serien-Druck) und
+  eine Tabelle wählen (CSV oder Excel, erste Zeile = Spaltennamen). Rot
+  markierte Zeilen heißen: Ein Platzhalter hat keine passende Spalte.
 
 Wenn es nicht druckt
   - "Kein Drucker gefunden": Drucker einschalten, koppeln, dann
-    Drucker > Drucker neu suchen.
+    Drucker > Drucker neu suchen, oder Drucker > Einrichten.
+  - "Drucker nicht erreichbar": Er ist aus oder noch mit dem Handy
+    verbunden. Einschalten bzw. am Handy Bluetooth ausschalten.
   - "Port lässt sich nicht öffnen": Ein anderes Programm (z. B. die
     Windows-Druckerwarteschlange) benutzt den Port gerade. Kurz warten
     oder das andere Programm schließen.
@@ -75,12 +89,12 @@ Wenn es nicht druckt
     "blockgroesse" auf 128 und "pause_ms" auf 50 setzen.
   - Unerwartete Fehler stehen in lauf.log.
 
-Aufkleber
-  Links "Aufkleber" anklicken. Kategorien wie in der Marklife-App
-  (Blumenladen-Geschenk, Schmuck, Pflanze, Zahlen, Sport, Wetter ...),
-  oben eine Suche mit englischen Stichwoertern (heart, flower, cake).
-  Ein Klick setzt den Aufkleber aufs Etikett; danach wie ein Bild
-  verschieben und in der Groesse aendern.
-  Grafiken: freie Sammlung Tabler Icons (MIT-Lizenz), die 29 Aufkleber
-  aus der Marklife-App und eigene Bilder. Eigene PNG/SVG in den Ordner
-  aufkleber\eigene legen; Unterordner werden zu eigenen Kategorien.
+Version und Urheber: Menü "Über".
+
+Portable Fassung selbst bauen
+  venv\Scripts\python.exe -m pip install -r requirements-bau.txt
+  venv\Scripts\python.exe bauen.py
+  Ergebnis: dist\Etikettendrucker-<Version>-portabel.zip. Der Treiber des
+  Herstellers ist nicht enthalten (fremde Software, darf nicht öffentlich
+  verteilt werden). Nur für eigene PCs ohne Internet legt
+  "bauen.py --mit-treiber" ihn bei; dieses ZIP nicht veröffentlichen.

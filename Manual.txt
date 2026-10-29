@@ -1,0 +1,97 @@
+Label Printer for the Marklife P15
+==================================
+(Deutsch: Anleitung.txt)
+
+Language
+  On first start the program asks for the language (German or English).
+  You can switch at any time in the "Sprache / Language" menu; the window
+  is rebuilt in the new language and your label stays.
+
+Setup (once)
+  Portable version: unzip, start Etikettendrucker.exe. Python is not
+  needed. If Windows warns on first start, click "More info" and "Run
+  anyway" (the program is not digitally signed).
+
+  From source:
+  1. Double-click install.bat. It asks for the language, downloads about
+     150 MB and takes a few minutes. Needs uv with Python 3.11.
+  2. Start with the "Etikettendrucker" shortcut on the desktop or in the
+     Start menu (or with Etikettendrucker.bat).
+
+Setup assistant (Printer > Setup)
+  Opens by itself on first start if no P15 is paired yet. Step 1 helps
+  with Bluetooth pairing and reports as soon as the P15 is there. Step 2
+  is optional: it sets up the Windows printer "Marklife P15" with the
+  manufacturer's driver so you can also print from Word or your browser.
+  If the driver is missing, the assistant downloads it from
+  marklifeprinter.com, checks its signature and starts the
+  manufacturer's installer (administrator rights once). The program
+  itself does not need the driver.
+
+  Pairing by hand: Settings > Bluetooth & devices > Add device > P15_...
+  (not the entry ending in _BLE).
+
+Before the first print
+  The defaults fit 40 x 12 mm labels (rotation 90°, margin 1 mm, offset
+  1 mm). If the P15 prints sideways or upside down: Printer > Test
+  orientation. Two labels come out (90° and 270°; the P15 prints along
+  the label, 0° and 180° do not fit). Take the label whose arrow points
+  up and choose its angle. If the print is not centered: Printer >
+  Fine-tune position.
+
+Designing a label
+  Choose size, paper and density at the top. Click a tool on the left.
+  Drag elements with the mouse; the eight squares at the corners and
+  sides (or the edges themselves) change the size. The fields of the
+  selected element are on the right. Del deletes the selected element.
+
+  Frames and lines: click "Frame …" or "Line …" on the left. A gallery
+  with about 50 shapes each opens, from plain frames to Art Deco,
+  flourishes, plants and nature (laurel wreath, flower meadow,
+  mushrooms, tulips, lavender, mountains, fir trees). One click puts the
+  shape on the label; the "Shape" button on the right changes it later.
+  All shapes are made for thermal printing (strokes at least 0.25 mm, no
+  solid areas).
+
+  Images are converted with dithering when inserted (good for photos).
+  For logos and graphics set "Conversion" on the right to "Threshold".
+
+  Frame colors: blue = selected, orange = sticks out over the edge and
+  gets cut off, red = cannot be printed (e.g. QR code too small).
+
+Stickers
+  Click "Stickers" on the left. Categories as in the Marklife app
+  (flower shop, jewelry, plants, numbers, sports, weather ...), and a
+  search with English keywords at the top (heart, flower, cake). One
+  click puts the sticker on the label; then move and resize it like an
+  image.
+  Graphics: the free Tabler Icons collection (MIT license) and your own
+  images. Put your own PNG/SVG files into the folder aufkleber\eigene;
+  subfolders become categories of their own.
+
+Batch printing
+  Write {{column name}} into a text, QR code or barcode, for example
+  {{Name}}. Then click "Batch print" on the left (or File > Batch print)
+  and choose a table (CSV or Excel, first row = column names). Rows
+  marked red mean: a placeholder has no matching column.
+
+If nothing prints
+  - "No printer found": switch the printer on, pair it, then Printer >
+    Search for printers again, or Printer > Setup.
+  - "Printer cannot be reached": it is off or still connected to a
+    phone. Switch it on or turn off Bluetooth on the phone.
+  - "Cannot open port": another program (e.g. the Windows print spooler)
+    is using the port. Wait a moment or close the other program.
+  - The print is chopped up or stops: in einstellungen.json set
+    "blockgroesse" to 128 and "pause_ms" to 50.
+  - Unexpected errors are written to lauf.log.
+
+Version and author: "About" menu.
+
+Building the portable version
+  venv\Scripts\python.exe -m pip install -r requirements-bau.txt
+  venv\Scripts\python.exe bauen.py
+  Result: dist\Etikettendrucker-<version>-portabel.zip. The
+  manufacturer's driver is not included (third-party software that may
+  not be distributed publicly). For your own offline PCs only,
+  "bauen.py --mit-treiber" adds it; do not publish that ZIP.

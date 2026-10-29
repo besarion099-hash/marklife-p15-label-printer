@@ -133,7 +133,7 @@ def test_menue_ueber_zeigt_version_und_autor(qapp, tmp_path, monkeypatch):
     assert len(ueber) == 1 and ueber[0].menu() is None      # direkt anklickbar
     ueber[0].trigger()
     assert gezeigt == [fenster]
-    assert "1.0" in text() and "Besarion" in text() and "29.10.2026" in text()
+    assert "1.1" in text() and "Besarion" in text() and "29.10.2026" in text()
 
 
 def test_werkzeuge_haben_symbole(qapp, tmp_path):

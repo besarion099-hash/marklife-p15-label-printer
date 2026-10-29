@@ -13,6 +13,8 @@ import io
 from dataclasses import dataclass
 from pathlib import Path
 
+from kern.sprache import t
+
 
 class TabellenFehler(Exception):
     """Die Datei laesst sich nicht als Tabelle lesen."""
@@ -34,10 +36,10 @@ def lesen(pfad) -> Tabelle:
             zeilen = _xlsx(pfad)
         else:
             raise TabellenFehler(
-                f"Dateien vom Typ {endung or '(ohne Endung)'} kann der Serien-Druck nicht lesen. "
-                "Bitte CSV oder Excel (.xlsx) nehmen.")
+                t("Dateien vom Typ {endung} kann der Serien-Druck nicht lesen. "
+                  "Bitte CSV oder Excel (.xlsx) nehmen.", endung=endung or t("(ohne Endung)")))
     except OSError as fehler:
-        raise TabellenFehler(f"Die Datei lässt sich nicht öffnen: {fehler}") from fehler
+        raise TabellenFehler(t("Die Datei lässt sich nicht öffnen: {fehler}", fehler=fehler)) from fehler
     return _tabelle(zeilen)
 
 
@@ -59,7 +61,8 @@ def _xlsx(pfad: Path) -> list:
     except OSError:
         raise
     except Exception as fehler:     # openpyxl wirft je nach Schaden verschiedene Typen
-        raise TabellenFehler(f"Die Excel-Datei lässt sich nicht lesen: {fehler}") from fehler
+        raise TabellenFehler(t("Die Excel-Datei lässt sich nicht lesen: {fehler}",
+                               fehler=fehler)) from fehler
     try:
         blatt = mappe.worksheets[0]
         return [[_zelle(wert) for wert in zeile] for zeile in blatt.iter_rows(values_only=True)]
@@ -71,7 +74,7 @@ def _zelle(wert) -> str:
     if wert is None:
         return ""
     if isinstance(wert, bool):
-        return "ja" if wert else "nein"
+        return t("ja") if wert else t("nein")
     if isinstance(wert, float) and wert.is_integer():
         return str(int(wert))
     if isinstance(wert, (datetime.datetime, datetime.date)):
@@ -82,8 +85,8 @@ def _zelle(wert) -> str:
 def _tabelle(zeilen: list) -> Tabelle:
     zeilen = [zeile for zeile in zeilen if any(str(zelle).strip() for zelle in zeile)]
     if not zeilen:
-        raise TabellenFehler("Die Datei enthält keine Zeilen.")
-    spalten = [str(name).strip() or f"Spalte {i + 1}" for i, name in enumerate(zeilen[0])]
+        raise TabellenFehler(t("Die Datei enthält keine Zeilen."))
+    spalten = [str(name).strip() or t("Spalte {nr}", nr=i + 1) for i, name in enumerate(zeilen[0])]
     daten = [{name: (zeile[i] if i < len(zeile) else "") for i, name in enumerate(spalten)}
              for zeile in zeilen[1:]]
     return Tabelle(spalten, daten)

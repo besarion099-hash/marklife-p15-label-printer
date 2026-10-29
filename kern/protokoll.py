@@ -13,6 +13,8 @@ und der Nachschub fuer Endlospapier und schwarze Marke.
 
 from __future__ import annotations
 
+from kern.sprache import t
+
 KOPF_PUNKTE = 112                    # Breite des Druckkopfs (14 mm bei 203 dpi)
 DICHTE_BYTE = {1: 0x06, 2: 0x0A, 3: 0x0E}   # 0x0A sendet der Treiber als Vorgabe
 NACHSCHUB = {
@@ -37,10 +39,10 @@ def raster(bild) -> bytes:
 def bildbefehl(bild) -> bytes:
     breite, hoehe = bild.size
     if breite < 1 or hoehe < 1:
-        raise ValueError("Das Bild ist leer.")
+        raise ValueError(t("Das Bild ist leer."))
     zeilenbytes = (breite + 7) // 8
     if zeilenbytes > 0xFFFF or hoehe > 0xFFFF:
-        raise ValueError("Das Bild ist zu groß für den Drucker.")
+        raise ValueError(t("Das Bild ist zu groß für den Drucker."))
     kopf = bytes([0x1D, 0x76, 0x30, 0x00,
                   zeilenbytes & 0xFF, zeilenbytes >> 8,
                   hoehe & 0xFF, hoehe >> 8])
@@ -49,9 +51,9 @@ def bildbefehl(bild) -> bytes:
 
 def auftrag(bild, papiertyp: int, dichte: int) -> bytes:
     if papiertyp not in NACHSCHUB:
-        raise ValueError(f"Unbekannter Papiertyp: {papiertyp}")
+        raise ValueError(t("Unbekannter Papiertyp: {wert}", wert=papiertyp))
     if dichte not in DICHTE_BYTE:
-        raise ValueError(f"Unbekannte Dichte: {dichte}")
+        raise ValueError(t("Unbekannte Dichte: {wert}", wert=dichte))
     # Der Treiber springt auch VOR dem Bild mit 1D 0C zum naechsten Etikett.
     # Am Geraet kostete das ein leeres Etikett je Druck; deshalb nur danach.
     return b"".join([

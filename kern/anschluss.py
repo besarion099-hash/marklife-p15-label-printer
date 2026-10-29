@@ -14,6 +14,8 @@ import re
 import time
 from dataclasses import dataclass
 
+from kern.sprache import t
+
 _MAC = re.compile(r"&([0-9A-Fa-f]{12})_")
 # Geraetenamen der Marklife-/YXQ-Drucker (P15_ZF39F, P12_..., S15...). Solche Ports
 # stehen ganz vorn, damit die Vorauswahl nicht auf einem Kopfhoerer landet.
@@ -89,12 +91,12 @@ _NICHT_ERREICHBAR = ("1167", "121", "nicht angeschlossen", "Semaphore")
 def oeffnen_meldung(portname: str, fehler) -> str:
     text = str(fehler)
     if any(merkmal in text for merkmal in _NICHT_ERREICHBAR):
-        return (f"Der Drucker an {portname} ist nicht erreichbar.\n\n"
-                "Bitte prüfen:\n"
-                "• Ist er eingeschaltet? (Nach einer Pause schaltet er sich ab.)\n"
-                "• Ist das Handy noch mit ihm verbunden? Dann dort Bluetooth ausschalten.\n\n"
-                f"Technisch: {text}")
-    return f"Der Port {portname} lässt sich nicht öffnen: {text}"
+        return t("Der Drucker an {port} ist nicht erreichbar.\n\n"
+                 "Bitte prüfen:\n"
+                 "• Ist er eingeschaltet? (Nach einer Pause schaltet er sich ab.)\n"
+                 "• Ist das Handy noch mit ihm verbunden? Dann dort Bluetooth ausschalten.\n\n"
+                 "Technisch: {text}", port=portname, text=text)
+    return t("Der Port {port} lässt sich nicht öffnen: {text}", port=portname, text=text)
 
 
 def _serial_oeffnen(portname):
@@ -158,7 +160,8 @@ class Verbindung:
             self._port.flush()
         except OSError as fehler:
             raise AnschlussFehler(
-                f"Die Verbindung zu {self.portname} ist abgerissen: {fehler}") from fehler
+                t("Die Verbindung zu {port} ist abgerissen: {fehler}",
+                  port=self.portname, fehler=fehler)) from fehler
 
     def __exit__(self, art, wert, verlauf):
         try:

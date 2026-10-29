@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (QDialog, QHBoxLayout, QLabel, QLineEdit, QListVie
                                QListWidgetItem, QVBoxLayout)
 
 from kern import aufkleber as ak
+from kern.sprache import t
 
 VORSCHAU_PX = 64
 
@@ -57,17 +58,20 @@ def als_png(eintrag, px: int = 320) -> bytes:
 class AufkleberDialog(QDialog):
     def __init__(self, katalog: dict, eltern=None):
         super().__init__(eltern)
-        self.setWindowTitle("Aufkleber")
+        self.setWindowTitle(t("Aufkleber"))
         self.resize(820, 560)
         self.katalog = katalog
         self.gewaehlt = None
         self._symbole = {}
 
         self.suche = QLineEdit()
-        self.suche.setPlaceholderText("Suchen (englische Stichwörter, z. B. heart, flower, cake) …")
+        self.suche.setPlaceholderText(t("Suchen (englische Stichwörter, z. B. heart, flower, cake) …"))
         self.kategorien = QListWidget()
         self.kategorien.setFixedWidth(220)
-        self.kategorien.addItems(list(katalog))
+        for name in katalog:                  # Name zur Anzeige uebersetzt, Schluessel bleibt
+            punkt = QListWidgetItem(t(name))
+            punkt.setData(Qt.ItemDataRole.UserRole, name)
+            self.kategorien.addItem(punkt)
         self.raster = QListWidget()
         self.raster.setViewMode(QListView.ViewMode.IconMode)
         self.raster.setIconSize(QSize(VORSCHAU_PX, VORSCHAU_PX))
@@ -85,14 +89,15 @@ class AufkleberDialog(QDialog):
         aussen.addLayout(mitte, 1)
         aussen.addWidget(self.hinweis)
 
-        self.kategorien.currentTextChanged.connect(self._zeige_kategorie)
+        self.kategorien.currentItemChanged.connect(
+            lambda punkt, *_: self._zeige_kategorie(self._schluessel(punkt)))
         self.suche.textChanged.connect(self._suchen)
         self.raster.itemClicked.connect(self._gewaehlt)
         if katalog:
             self.kategorien.setCurrentRow(0)
         else:
-            self.hinweis.setText("Keine Aufkleber gefunden. install.bat lädt die freie Sammlung; "
-                                 "eigene Grafiken in den Ordner aufkleber\\eigene legen.")
+            self.hinweis.setText(t("Keine Aufkleber gefunden. install.bat lädt die freie Sammlung; "
+                                   "eigene Grafiken in den Ordner aufkleber\\eigene legen."))
 
     def _symbol(self, eintrag) -> QIcon:
         if eintrag.pfad not in self._symbole:
@@ -106,7 +111,7 @@ class AufkleberDialog(QDialog):
             punkt.setToolTip(eintrag.name)
             punkt.setData(Qt.ItemDataRole.UserRole, eintrag)
             self.raster.addItem(punkt)
-        self.hinweis.setText(f"{len(liste)} Aufkleber")
+        self.hinweis.setText(t("{anzahl} Aufkleber", anzahl=len(liste)))
 
     def _zeige_kategorie(self, name):
         if name and not self.suche.text().strip():
@@ -116,8 +121,11 @@ class AufkleberDialog(QDialog):
         if text.strip():
             self.zeige(ak.suchen(self.katalog, text))
         else:
-            self._zeige_kategorie(self.kategorien.currentItem().text()
-                                  if self.kategorien.currentItem() else "")
+            self._zeige_kategorie(self._schluessel(self.kategorien.currentItem()))
+
+    @staticmethod
+    def _schluessel(punkt):
+        return punkt.data(Qt.ItemDataRole.UserRole) if punkt is not None else ""
 
     def _gewaehlt(self, punkt):
         self.gewaehlt = punkt.data(Qt.ItemDataRole.UserRole)

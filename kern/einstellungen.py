@@ -21,6 +21,7 @@ _ERLAUBT = {
     "papiertyp": {1, 2, 3},
     "dichte": {1, 2, 3},
     "drehung_grad": {0, 90, 180, 270},
+    "sprache": {"", "de", "en"},
 }
 _MINDESTENS = {"blockgroesse": 1, "pause_ms": 0, "rand_ende_mm": 0.0}
 
@@ -39,6 +40,7 @@ class Einstellungen:
     blockgroesse: int = 512
     pause_ms: int = 20
     letzter_ordner: str = ""
+    sprache: str = ""           # "de", "en"; leer = beim naechsten Start fragen
 
 
 def _passend(wert, vorgabe):
@@ -83,3 +85,10 @@ def speichern(einstellungen: Einstellungen, pfad: Path = STANDARD_PFAD) -> None:
     zwischen.write_text(json.dumps(asdict(einstellungen), indent=2, ensure_ascii=False),
                         encoding="utf-8")
     os.replace(zwischen, pfad)
+
+
+def sprache_setzen(code: str, pfad: Path = STANDARD_PFAD) -> None:
+    """Nur die Sprache setzen, Rest behalten (fuer install.bat)."""
+    einstellungen = laden(pfad)
+    einstellungen.sprache = code if code in _ERLAUBT["sprache"] else ""
+    speichern(einstellungen, pfad)

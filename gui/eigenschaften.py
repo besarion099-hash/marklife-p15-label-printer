@@ -19,14 +19,15 @@ from gui.bilder import bild_lesen
 from kern.etikett import Barcode, Bild, Linie, QRCode, Rahmen, Text
 from kern import stile
 from kern.stile import LINIENSTILE, RAHMENSTILE
+from kern.sprache import N_, t
 from kern.zeichnen import SCHRIFTEN
 
-NAMEN = {Text: "Text", QRCode: "QR-Code", Barcode: "Barcode", Bild: "Bild",
-         Rahmen: "Rahmen", Linie: "Linie"}
-_AUSRICHTUNG = [("links", "links"), ("mitte", "Mitte"), ("rechts", "rechts")]
+NAMEN = {Text: N_("Text"), QRCode: N_("QR-Code"), Barcode: N_("Barcode"), Bild: N_("Bild"),
+         Rahmen: N_("Rahmen"), Linie: N_("Linie")}
+_AUSRICHTUNG = [("links", N_("links")), ("mitte", N_("Mitte")), ("rechts", N_("rechts"))]
 _BARCODES = [("code128", "Code 128"), ("ean13", "EAN-13")]
-_VERFAHREN = [("schwelle", "Schwelle (Grafik, Logo)"),
-              ("fehlerverteilung", "Fehlerverteilung (Foto)")]
+_VERFAHREN = [("schwelle", N_("Schwelle (Grafik, Logo)")),
+              ("fehlerverteilung", N_("Fehlerverteilung (Foto)"))]
 _DREHUNG = [(0, "0°"), (90, "90°"), (180, "180°"), (270, "270°")]
 
 
@@ -55,45 +56,45 @@ class Eigenschaften(QWidget):
         form = QFormLayout(self._inhalt)
         self._aussen.insertWidget(0, self._inhalt)
         if element is None:
-            form.addRow(QLabel("Kein Element gewählt.\n\nLinks ein Werkzeug anklicken\n"
-                               "oder ein Element auf dem Etikett."))
+            form.addRow(QLabel(t("Kein Element gewählt.\n\nLinks ein Werkzeug anklicken\n"
+                                 "oder ein Element auf dem Etikett.")))
             return
-        form.addRow(QLabel(f"<b>{NAMEN[type(element)]}</b>"))
+        form.addRow(QLabel(f"<b>{t(NAMEN[type(element)])}</b>"))
         self._eigene_felder(form, element)
-        self._zahl(form, "x_mm", "Links (mm)", -50, 200)
-        self._zahl(form, "y_mm", "Oben (mm)", -50, 200)
-        self._zahl(form, "breite_mm", "Breite (mm)", 0.125, 200)
-        self._zahl(form, "hoehe_mm", "Höhe (mm)", 0.125, 200)
-        self._auswahl(form, "drehung", "Drehung", _DREHUNG)
-        knopf = QPushButton("Element löschen")
+        self._zahl(form, "x_mm", t("Links (mm)"), -50, 200)
+        self._zahl(form, "y_mm", t("Oben (mm)"), -50, 200)
+        self._zahl(form, "breite_mm", t("Breite (mm)"), 0.125, 200)
+        self._zahl(form, "hoehe_mm", t("Höhe (mm)"), 0.125, 200)
+        self._auswahl(form, "drehung", t("Drehung"), _DREHUNG)
+        knopf = QPushButton(t("Element löschen"))
         knopf.clicked.connect(self.loeschen_gewuenscht.emit)
         form.addRow(knopf)
 
     def _eigene_felder(self, form, element):
         if isinstance(element, Text):
-            self._mehrzeilig(form, "inhalt", "Text")
-            self._auswahl(form, "schrift", "Schrift", [(name, name) for name in SCHRIFTEN])
-            self._zahl(form, "groesse_pt", "Größe (pt)", 4, 96, 0.5)
-            self._haken(form, "fett", "fett")
-            self._auswahl(form, "ausrichtung", "Ausrichtung", _AUSRICHTUNG)
+            self._mehrzeilig(form, "inhalt", t("Text"))
+            self._auswahl(form, "schrift", t("Schrift"), [(name, name) for name in SCHRIFTEN])
+            self._zahl(form, "groesse_pt", t("Größe (pt)"), 4, 96, 0.5)
+            self._haken(form, "fett", t("fett"))
+            self._auswahl(form, "ausrichtung", t("Ausrichtung"), _AUSRICHTUNG)
         elif isinstance(element, QRCode):
-            self._zeile(form, "inhalt", "Inhalt")
+            self._zeile(form, "inhalt", t("Inhalt"))
         elif isinstance(element, Barcode):
-            self._zeile(form, "inhalt", "Inhalt")
-            self._auswahl(form, "art", "Art", _BARCODES)
-            self._haken(form, "klartext", "Klartext darunter")
+            self._zeile(form, "inhalt", t("Inhalt"))
+            self._auswahl(form, "art", t("Art"), _BARCODES)
+            self._haken(form, "klartext", t("Klartext darunter"))
         elif isinstance(element, Bild):
-            self._auswahl(form, "verfahren", "Umwandlung", _VERFAHREN)
-            knopf = QPushButton("Anderes Bild …")
+            self._auswahl(form, "verfahren", t("Umwandlung"), _VERFAHREN)
+            knopf = QPushButton(t("Anderes Bild …"))
             knopf.clicked.connect(self._bild_waehlen)
             form.addRow(knopf)
         elif isinstance(element, Rahmen):
             self._form(form, "rahmen", RAHMENSTILE)
-            self._zahl(form, "strich_mm", "Strich (mm)", 0.25, 5)
-            self._zahl(form, "ecken_mm", "Ecken (mm)", 0, 20)
+            self._zahl(form, "strich_mm", t("Strich (mm)"), 0.25, 5)
+            self._zahl(form, "ecken_mm", t("Ecken (mm)"), 0, 20)
         elif isinstance(element, Linie):
             self._form(form, "linie", LINIENSTILE)
-            self._zahl(form, "strich_mm", "Strich (mm)", 0.25, 5)
+            self._zahl(form, "strich_mm", t("Strich (mm)"), 0.25, 5)
 
     def _setzen(self, name, wert):
         setattr(self.element, name, wert)
@@ -132,7 +133,7 @@ class Eigenschaften(QWidget):
     def _auswahl(self, form, name, beschriftung, moeglich):
         feld = QComboBox()
         for wert, text in moeglich:
-            feld.addItem(text, wert)
+            feld.addItem(t(text), wert)
         feld.setCurrentIndex(max(0, feld.findData(getattr(self.element, name))))
         feld.currentIndexChanged.connect(
             lambda i, n=name, f=feld: self._setzen(n, f.itemData(i)))
@@ -142,10 +143,10 @@ class Eigenschaften(QWidget):
     def _form(self, form, art, moeglich):
         """Knopf mit Vorschau der aktuellen Form; Klick oeffnet die Galerie."""
         namen = dict(moeglich)
-        knopf = QPushButton(namen.get(self.element.stil, self.element.stil) + " …")
+        knopf = QPushButton(t(namen.get(self.element.stil, self.element.stil)) + " …")
         knopf.setIcon(QIcon(QPixmap.fromImage(formen.vorschau(art, self.element.stil))))
         knopf.setIconSize(QSize(72, 24))
-        knopf.setToolTip("Andere Form aus der Galerie wählen")
+        knopf.setToolTip(t("Andere Form aus der Galerie wählen"))
 
         def waehlen():
             stil = self.form_waehlen(art, self.element.stil, self)
@@ -158,7 +159,7 @@ class Eigenschaften(QWidget):
                 self._setzen("stil", stil)
                 self.zeige(self.element)              # Knopf mit neuer Vorschau
         knopf.clicked.connect(waehlen)
-        form.addRow("Form", knopf)
+        form.addRow(t("Form"), knopf)
         self.felder["stil"] = knopf
 
     def aktualisieren(self):
@@ -173,8 +174,8 @@ class Eigenschaften(QWidget):
                 feld.blockSignals(False)
 
     def _bild_waehlen(self):
-        pfad, _ = QFileDialog.getOpenFileName(self, "Bild wählen", "",
-                                              "Bilder (*.png *.jpg *.jpeg *.bmp *.gif)")
+        pfad, _ = QFileDialog.getOpenFileName(self, t("Bild wählen"), "",
+                                              t("Bilder (*.png *.jpg *.jpeg *.bmp *.gif)"))
         if not pfad:
             return
         daten = bild_lesen(pfad, self)

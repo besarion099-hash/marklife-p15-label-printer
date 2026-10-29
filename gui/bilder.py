@@ -9,6 +9,8 @@ from pathlib import Path
 from PySide6.QtGui import QImage
 from PySide6.QtWidgets import QMessageBox
 
+from kern.sprache import t
+
 
 def zu_qimage(bild) -> QImage:
     grau = bild.convert("L")
@@ -25,7 +27,8 @@ def bild_lesen(pfad, eltern=None) -> bytes | None:
         with Image.open(BytesIO(daten)) as bild:
             bild.verify()
     except (OSError, SyntaxError, ValueError) as fehler:
-        QMessageBox.warning(eltern, "Bild", f"Das Bild lässt sich nicht lesen:\n{fehler}")
+        QMessageBox.warning(eltern, t("Bild"), t("Das Bild lässt sich nicht lesen:\n{fehler}",
+                                                  fehler=fehler))
         return None
     return daten
 

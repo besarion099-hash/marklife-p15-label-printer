@@ -84,8 +84,10 @@ def _absturz_melden(art, wert, verlauf):
         pass
     try:
         from PySide6.QtWidgets import QMessageBox
-        QMessageBox.critical(None, "Etikettendrucker",
-                             f"Unerwarteter Fehler:\n{wert}\n\nEinzelheiten in {LOG.name}.")
+        from kern.sprache import t
+        QMessageBox.critical(None, t("Etikettendrucker"),
+                             t("Unerwarteter Fehler:\n{fehler}\n\nEinzelheiten in {datei}.",
+                               fehler=wert, datei=LOG.name))
     except Exception:
         pass
 
@@ -99,13 +101,43 @@ def main() -> int:
 
     from gui import aussehen
     from gui.fenster import Hauptfenster
+    from gui.sprachwahl import qt_uebersetzen, sprache_fragen
     from gui.ueber import VERSION
+    from kern import einstellungen, sprache
     app = QApplication(sys.argv)
     app.setApplicationName("Etikettendrucker")
     app.setApplicationVersion(VERSION)
     app.setWindowIcon(QIcon(str(SYMBOL)))
     aussehen.anwenden(app)
+
+    pfad = einstellungen.STANDARD_PFAD
+    neuer_pc = not pfad.exists()
+    e = einstellungen.laden(pfad)
+    if not e.sprache:                                # erster Start: Sprache fragen
+        e.sprache = sprache_fragen(sprache.system_sprache())
+        try:
+            einstellungen.speichern(e, pfad)
+        except OSError:
+            pass
+    sprache.setze(e.sprache)
+    qt_uebersetzen(app, e.sprache)
+
     fenster = Hauptfenster()
+    fenster.erster_start = neuer_pc
+    offen = [fenster]                                # das jeweils aktuelle Fenster
+
+    def sprache_gewechselt():
+        alt = offen[0]
+        qt_uebersetzen(app, sprache.aktuell())
+        neu = Hauptfenster()                         # alle Texte in der neuen Sprache
+        neu.uebernehmen_von(alt)
+        neu.sprache_gewechselt.connect(sprache_gewechselt)
+        offen[0] = neu
+        neu.show()
+        alt.close()
+        alt.deleteLater()
+
+    fenster.sprache_gewechselt.connect(sprache_gewechselt)
     fenster.show()
     if fenster.erster_start_ohne_drucker():
         from PySide6.QtCore import QTimer

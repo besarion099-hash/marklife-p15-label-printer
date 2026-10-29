@@ -43,8 +43,11 @@ PAKETDATEIEN = ["yxqpor.inf", "YinXiaoQian.cat", "P15x.GPD", "P15.INI", "amd64"]
 LIESMICH = f"""Etikettendrucker {VERSION} (portabel) - Etiketten für den Marklife P15
 
 Start: {NAME}.exe doppelklicken. Python ist nicht nötig.
+(English: README.txt)
 
 Erster Start auf einem neuen PC:
+  Zuerst fragt das Programm nach der Sprache (Deutsch oder Englisch;
+  später im Menü "Sprache / Language" änderbar).
   Ist noch kein P15 gekoppelt, öffnet sich der Einrichtungs-Assistent
   (später auch über Drucker > Einrichten):
   1. Bluetooth: Er öffnet die Windows-Einstellungen und meldet, sobald
@@ -69,6 +72,38 @@ Einstellungen (einstellungen.json) und Fehlerprotokoll (lauf.log) liegen
 hier neben der EXE, eigene Aufkleber-Grafiken in aufkleber\\eigene.
 
 Mehr in Anleitung.txt.
+"""
+
+README = f"""Label Printer {VERSION} (portable) - labels for the Marklife P15
+
+Start: double-click {NAME}.exe. Python is not needed.
+(Deutsch: LIESMICH.txt)
+
+First start on a new PC:
+  The program first asks for the language (German or English; can be
+  changed later in the "Sprache / Language" menu).
+  If no P15 is paired yet, the setup assistant opens
+  (later also via Printer > Setup):
+  1. Bluetooth: it opens the Windows settings and reports as soon as the
+     P15 is paired (disconnect your phone first).
+  2. Optional: it sets up the Windows printer "Marklife P15" with the
+     manufacturer's driver, so you can also print from Word and other
+     programs. It downloads the driver from marklifeprinter.com, checks
+     its signature and starts the manufacturer's installer. Windows asks
+     once for administrator rights.
+  3. Done: the program prints to the P15 it found.
+
+If Windows warns on first start ("Windows protected your PC"): click
+"More info" and "Run anyway". The program is not digitally signed.
+
+If "Smart App Control" is switched on, the EXE does not start at all.
+Then use install.bat from the source code instead.
+
+The folder can be moved or copied to a USB stick. Settings
+(einstellungen.json) and the error log (lauf.log) are stored next to the
+EXE, your own sticker graphics go into aufkleber\\eigene.
+
+More in Manual.txt.
 """
 
 VERSIONSDATEI = """VSVersionInfo(
@@ -137,7 +172,9 @@ def main(argumente=None) -> int:
     ordner = DIST / NAME
     (ordner / "aufkleber" / "eigene").mkdir(parents=True, exist_ok=True)
     (ordner / "LIESMICH.txt").write_text(LIESMICH, encoding="utf-8")
-    shutil.copy2(HIER / "Anleitung.txt", ordner / "Anleitung.txt")
+    (ordner / "README.txt").write_text(README, encoding="utf-8")
+    for anleitung in ("Anleitung.txt", "Manual.txt"):
+        shutil.copy2(HIER / anleitung, ordner / anleitung)
     zusatz = ""
     if mit_treiber:
         paket = treiberpaket()

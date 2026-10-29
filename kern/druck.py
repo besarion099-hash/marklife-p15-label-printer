@@ -13,6 +13,7 @@ from PIL import Image
 
 from kern import anschluss, protokoll, zeichnen
 from kern.etikett import Etikett, Rahmen, Text
+from kern.sprache import t
 
 TESTDREHUNGEN = (90, 270)      # der P15 druckt hochkant; 270 ist am Geraet bestaetigt
 _IM_UHRZEIGERSINN = {90: Image.Transpose.ROTATE_270, 180: Image.Transpose.ROTATE_180,
@@ -31,7 +32,7 @@ def druckbild(etikett, werte, drehung_grad: int, rand_ende_mm: float = 0.0,
     bild = zeichnen.zeichnen(etikett, werte, fehler)
     if fehler:
         index, meldung = fehler[0]
-        raise DruckFehler(f"Element {index + 1}: {meldung}")
+        raise DruckFehler(t("Element {nr}: {meldung}", nr=index + 1, meldung=meldung))
     bild = ende_kuerzen(bild, round(rand_ende_mm * zeichnen.PUNKTE_JE_MM))
     bild = verschieben(bild, round(versatz_mm * zeichnen.PUNKTE_JE_MM))
     if drehung_grad in _IM_UHRZEIGERSINN:
@@ -102,7 +103,7 @@ def drucken(etikett, zeilen, kopien, einstellungen, verbinden=anschluss.Verbindu
             fortschritt=None, abbrechen=None) -> int:
     """Jede Zeile kopien-mal drucken. Liefert die Zahl gesendeter Etiketten."""
     if not einstellungen.port:
-        raise DruckFehler("Kein Drucker gewählt.")
+        raise DruckFehler(t("Kein Drucker gewählt."))
     auftraege = [auftrag_fuer(etikett, werte, einstellungen) for werte in zeilen]
     return _senden(auftraege, kopien, einstellungen, verbinden, fortschritt, abbrechen)
 
@@ -130,7 +131,7 @@ def testmuster(grad: int, breite_mm: float, hoehe_mm: float) -> Etikett:
     return Etikett(breite_mm, hoehe_mm, [
         Rahmen(x_mm=0, y_mm=0, breite_mm=breite_mm, hoehe_mm=hoehe_mm, strich_mm=0.375),
         Text(x_mm=1, y_mm=1, breite_mm=breite_mm - 2, hoehe_mm=hoehe_mm - 2,
-             inhalt=f"↑ OBEN {grad}°", groesse_pt=8, fett=True, ausrichtung="mitte"),
+             inhalt=t("↑ OBEN {grad}°", grad=grad), groesse_pt=8, fett=True, ausrichtung="mitte"),
     ])
 
 
@@ -138,7 +139,7 @@ def ausrichtung_testen(einstellungen, breite_mm, hoehe_mm, verbinden=anschluss.V
                        fortschritt=None, abbrechen=None) -> int:
     """Ein Testmuster je Drehung drucken, damit man die richtige erkennt."""
     if not einstellungen.port:
-        raise DruckFehler("Kein Drucker gewählt.")
+        raise DruckFehler(t("Kein Drucker gewählt."))
     auftraege = [auftrag_fuer(testmuster(grad, breite_mm, hoehe_mm), None,
                               dataclasses.replace(einstellungen, drehung_grad=grad))
                  for grad in TESTDREHUNGEN]

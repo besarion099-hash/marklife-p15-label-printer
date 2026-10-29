@@ -12,8 +12,9 @@ from PySide6.QtWidgets import (QCheckBox, QLabel, QPushButton, QVBoxLayout, QWiz
                                QWizardPage)
 
 from kern import anschluss, einrichtung
+from kern.sprache import N_, t
 
-KOPPELN = (
+KOPPELN = N_(
     "<ol>"
     "<li>Den P15 einschalten. Ist ein Handy mit ihm verbunden, dort Bluetooth "
     "ausschalten oder die Marklife-App schließen.</li>"
@@ -32,12 +33,12 @@ def bluetooth_oeffnen():
 class KoppelnSeite(QWizardPage):
     def __init__(self, port_quelle, oeffnen):
         super().__init__()
-        self.setTitle("1. Drucker per Bluetooth koppeln")
+        self.setTitle(t("1. Drucker per Bluetooth koppeln"))
         self._port_quelle = port_quelle
         self.port = None
-        text = QLabel(KOPPELN)
+        text = QLabel(t(KOPPELN))
         text.setWordWrap(True)
-        knopf = QPushButton("Bluetooth-Einstellungen öffnen")
+        knopf = QPushButton(t("Bluetooth-Einstellungen öffnen"))
         knopf.setAutoDefault(False)              # Enter bedeutet "Weiter"
         knopf.clicked.connect(lambda *_: oeffnen())
         self.status = QLabel()
@@ -69,11 +70,13 @@ class KoppelnSeite(QWizardPage):
             self.port = port
             self.completeChanged.emit()
         if port is None:
-            self.status.setText("<span style='color:#a05a00'>⏳ Noch kein P15 gekoppelt – "
-                                "suche alle 2 Sekunden …</span>")
+            self.status.setText("<span style='color:#a05a00'>⏳ "
+                                + t("Noch kein P15 gekoppelt – suche alle 2 Sekunden …")
+                                + "</span>")
         else:
-            self.status.setText(f"<span style='color:#11772d'><b>✔ Gefunden: "
-                                f"{port.beschreibung}</b></span>")
+            self.status.setText("<span style='color:#11772d'><b>✔ "
+                                + t("Gefunden: {name}", name=port.beschreibung)
+                                + "</b></span>")
 
     def isComplete(self):
         return self.port is not None
@@ -84,18 +87,18 @@ class WindowsDruckerSeite(QWizardPage):
 
     def __init__(self, koppeln, werkzeug):
         super().__init__()
-        self.setTitle("2. Als Windows-Drucker einrichten (freiwillig)")
+        self.setTitle(t("2. Als Windows-Drucker einrichten (freiwillig)"))
         self._koppeln = koppeln
         self._werkzeug = werkzeug
-        text = QLabel(
+        text = QLabel(t(
             "Der Etikettendrucker braucht das nicht, er druckt direkt. Wer aber auch "
             "aus Word, dem Browser oder anderen Programmen auf den P15 drucken will, "
             "richtet hier den Windows-Drucker <b>„Marklife P15“</b> mit dem Treiber des "
             "Herstellers ein. Fehlt der Treiber noch, fragt Windows einmal nach "
-            "Administratorrechten.")
+            "Administratorrechten."))
         text.setWordWrap(True)
-        self.wahl = QCheckBox("Windows-Drucker „Marklife P15“ einrichten")
-        self.knopf = QPushButton("Jetzt einrichten")
+        self.wahl = QCheckBox(t("Windows-Drucker „Marklife P15“ einrichten"))
+        self.knopf = QPushButton(t("Jetzt einrichten"))
         self.knopf.setAutoDefault(False)
         self.knopf.clicked.connect(lambda *_: self.einrichten())
         self.status = QLabel()
@@ -117,18 +120,21 @@ class WindowsDruckerSeite(QWizardPage):
         if vorhanden == port:
             self.wahl.setChecked(False)
             self.knopf.setEnabled(False)
-            self.status.setText(f"<span style='color:#11772d'>✔ Schon eingerichtet: "
-                                f"„{einrichtung.DRUCKERNAME}“ an {port}.</span>")
+            self.status.setText("<span style='color:#11772d'>✔ "
+                                + t("Schon eingerichtet: „{name}“ an {port}.",
+                                    name=einrichtung.DRUCKERNAME, port=port)
+                                + "</span>")
         else:
             self.wahl.setChecked(True)
             self.knopf.setEnabled(True)
-            hinweis = f" (bisher an {vorhanden})" if vorhanden else ""
-            text = f"Wird an {port} eingerichtet{hinweis}."
+            text = (t("Wird an {port} eingerichtet (bisher an {alt}).", port=port, alt=vorhanden)
+                    if vorhanden else t("Wird an {port} eingerichtet.", port=port))
             if not self._werkzeug.treiber_da() and not self._werkzeug.paket_da():
-                text += ("<br>Der Treiber kommt vom Hersteller: Das Programm lädt ihn von "
-                         "marklifeprinter.com (ca. 6 MB), prüft die Signatur und startet "
-                         "das Installationsprogramm des Herstellers. Dort einfach "
-                         "durchklicken.")
+                text += "<br>" + t(
+                    "Der Treiber kommt vom Hersteller: Das Programm lädt ihn von "
+                    "marklifeprinter.com (ca. 6 MB), prüft die Signatur und startet "
+                    "das Installationsprogramm des Herstellers. Dort einfach "
+                    "durchklicken.")
             self.status.setText(text)
 
     def einrichten(self) -> bool:
@@ -136,9 +142,10 @@ class WindowsDruckerSeite(QWizardPage):
         try:
             meldung = self._werkzeug.einrichten(self._koppeln.port.name)
         except einrichtung.EinrichtungsFehler as fehler:
-            self.status.setText(f"<span style='color:#c00000'>Hat nicht geklappt: {fehler}"
-                                "<br>Haken entfernen, um ohne Windows-Drucker weiterzugehen."
-                                "</span>")
+            self.status.setText("<span style='color:#c00000'>"
+                                + t("Hat nicht geklappt: {fehler}", fehler=fehler) + "<br>"
+                                + t("Haken entfernen, um ohne Windows-Drucker weiterzugehen.")
+                                + "</span>")
             return False
         finally:
             QGuiApplication.restoreOverrideCursor()
@@ -154,17 +161,17 @@ class WindowsDruckerSeite(QWizardPage):
 class FertigSeite(QWizardPage):
     def __init__(self, koppeln):
         super().__init__()
-        self.setTitle("3. Fertig")
+        self.setTitle(t("3. Fertig"))
         self._koppeln = koppeln
         self.text = QLabel()
         self.text.setWordWrap(True)
         QVBoxLayout(self).addWidget(self.text)
 
     def initializePage(self):
-        self.text.setText(
-            f"Der Etikettendrucker druckt jetzt auf <b>{self._koppeln.port.beschreibung}</b>."
+        self.text.setText(t(
+            "Der Etikettendrucker druckt jetzt auf <b>{name}</b>."
             "<br><br>Tipp: Sitzt der Druck nicht ganz auf dem Etikett, hilft "
-            "<b>Drucker › Lage feinjustieren</b>.")
+            "<b>Drucker › Lage feinjustieren</b>.", name=self._koppeln.port.beschreibung))
 
 
 class _Werkzeug:
@@ -179,12 +186,12 @@ class EinrichtungsAssistent(QWizard):
     def __init__(self, port_quelle=anschluss.ports, werkzeug=None, oeffnen=bluetooth_oeffnen,
                  eltern=None):
         super().__init__(eltern)
-        self.setWindowTitle("Drucker einrichten")
+        self.setWindowTitle(t("Drucker einrichten"))
         self.setWizardStyle(QWizard.WizardStyle.ModernStyle)
-        self.setButtonText(QWizard.WizardButton.NextButton, "Weiter >")
-        self.setButtonText(QWizard.WizardButton.BackButton, "< Zurück")
-        self.setButtonText(QWizard.WizardButton.FinishButton, "Fertig")
-        self.setButtonText(QWizard.WizardButton.CancelButton, "Abbrechen")
+        self.setButtonText(QWizard.WizardButton.NextButton, t("Weiter >"))
+        self.setButtonText(QWizard.WizardButton.BackButton, t("< Zurück"))
+        self.setButtonText(QWizard.WizardButton.FinishButton, t("Fertig"))
+        self.setButtonText(QWizard.WizardButton.CancelButton, t("Abbrechen"))
         self.koppeln = KoppelnSeite(port_quelle, oeffnen)
         self.windows = WindowsDruckerSeite(self.koppeln, werkzeug or _Werkzeug())
         self.addPage(self.koppeln)

@@ -25,6 +25,7 @@ import zipfile
 from pathlib import Path
 
 from kern.orte import DATEN, PROGRAMM
+from kern.sprache import t
 
 SKRIPT = PROGRAMM / "treiber" / "drucker_einrichten.ps1"
 PAKET = DATEN / "treiber" / "p15" / "yxqpor.inf"      # portabel: neben der EXE
@@ -94,23 +95,24 @@ def installer_herunterladen(ordner: Path, laden=_laden, pruefen=signiert_vom_her
     try:
         daten = laden(DOWNLOAD)
     except OSError as fehler:
-        raise EinrichtungsFehler(f"Download vom Hersteller ging nicht ({fehler}).\n"
-                                 f"Von Hand: {DOWNLOAD_SEITE}") from fehler
+        raise EinrichtungsFehler(t("Download vom Hersteller ging nicht ({fehler}).\n"
+                                   "Von Hand: {seite}", fehler=fehler,
+                                   seite=DOWNLOAD_SEITE)) from fehler
     if len(daten) > HOECHSTENS:
-        raise EinrichtungsFehler("Der Download ist unerwartet groß.")
+        raise EinrichtungsFehler(t("Der Download ist unerwartet groß."))
     try:
         archiv = zipfile.ZipFile(io.BytesIO(daten))
         eintrag = next(e for e in archiv.infolist()
                        if e.filename.lower().endswith(".exe") and not e.is_dir())
     except (zipfile.BadZipFile, StopIteration):
-        raise EinrichtungsFehler("Der Download enthält keinen Treiber-Installer. "
-                                 f"Von Hand: {DOWNLOAD_SEITE}") from None
+        raise EinrichtungsFehler(t("Der Download enthält keinen Treiber-Installer. "
+                                   "Von Hand: {seite}", seite=DOWNLOAD_SEITE)) from None
     ziel = Path(ordner) / Path(eintrag.filename).name        # ohne Pfadteile aus dem ZIP
     ziel.write_bytes(archiv.read(eintrag))
     if not pruefen(ziel):
         ziel.unlink(missing_ok=True)
-        raise EinrichtungsFehler("Der geladene Installer ist nicht vom Hersteller signiert "
-                                 "und wurde nicht gestartet.")
+        raise EinrichtungsFehler(t("Der geladene Installer ist nicht vom Hersteller signiert "
+                                   "und wurde nicht gestartet."))
     return ziel
 
 
@@ -118,8 +120,8 @@ def installer_ausfuehren(installer: Path, ausfuehren=_powershell):
     """Den Installer des Herstellers mit Administratorrechten starten und warten."""
     ergebnis = ausfuehren(f"Start-Process -FilePath {_zitat(installer)} -Verb RunAs -Wait", 900)
     if ergebnis.returncode != 0:
-        raise EinrichtungsFehler("Der Treiber-Installer wurde abgebrochen oder die "
-                                 "Rückfrage nach Administratorrechten abgelehnt.")
+        raise EinrichtungsFehler(t("Der Treiber-Installer wurde abgebrochen oder die "
+                                   "Rückfrage nach Administratorrechten abgelehnt."))
 
 
 def befehl(port: str, protokoll: Path, als_admin: bool, paket=PAKET, skript=SKRIPT) -> str:
@@ -141,7 +143,7 @@ def einrichten(port: str, ausfuehren=_powershell, als_admin=None, paket=PAKET,
     Fehlt der Treiber: beiliegendes Paket per Skript mit Adminrechten, sonst
     Installer vom Hersteller laden und ausfuehren, danach das Skript ohne."""
     if sys.platform != "win32" and ausfuehren is _powershell:
-        raise EinrichtungsFehler("Geht nur unter Windows.")
+        raise EinrichtungsFehler(t("Geht nur unter Windows."))
     if als_admin is None:
         als_admin = not treiber_da(ausfuehren)
     if als_admin and not paket_da(paket):
@@ -157,10 +159,11 @@ def einrichten(port: str, ausfuehren=_powershell, als_admin=None, paket=PAKET,
         text = (protokoll.read_text(encoding="utf-8-sig").strip()
                 if protokoll.is_file() else "")
     if text == "OK":
-        return f'Windows-Drucker "{DRUCKERNAME}" ist an {port} eingerichtet.'
+        return t('Windows-Drucker "{name}" ist an {port} eingerichtet.', name=DRUCKERNAME,
+                 port=port)
     if text:
         raise EinrichtungsFehler(text.removeprefix("FEHLER: "))
     if als_admin:
-        raise EinrichtungsFehler("Die Windows-Rückfrage nach Administratorrechten wurde "
-                                 "abgelehnt oder ist gescheitert.")
-    raise EinrichtungsFehler((ergebnis.stderr or ergebnis.stdout or "Unbekannter Fehler").strip())
+        raise EinrichtungsFehler(t("Die Windows-Rückfrage nach Administratorrechten wurde "
+                                   "abgelehnt oder ist gescheitert."))
+    raise EinrichtungsFehler((ergebnis.stderr or ergebnis.stdout or t("Unbekannter Fehler")).strip())

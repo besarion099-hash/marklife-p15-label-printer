@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QDialog, QListView, QListWidget, QListWidgetItem, 
 from gui.bilder import zu_qimage
 from kern import stile, zeichnen
 from kern.etikett import Linie, Rahmen
+from kern.sprache import t
 
 VORSCHAU = QSize(216, 72)
 
@@ -33,7 +34,7 @@ class FormenDialog(QDialog):
         self.art = art
         self.gewaehlt = None
         formen = stile.RAHMENSTILE if art == "rahmen" else stile.LINIENSTILE
-        self.setWindowTitle(f"{'Rahmen' if art == 'rahmen' else 'Linie'} wählen")
+        self.setWindowTitle(t("Rahmen wählen") if art == "rahmen" else t("Linie wählen"))
         self.resize(780, 600)
         self.raster = QListWidget()
         self.raster.setViewMode(QListView.ViewMode.IconMode)
@@ -45,9 +46,9 @@ class FormenDialog(QDialog):
         self.raster.setUniformItemSizes(True)
         self.raster.setWordWrap(True)
         for name, text in formen:
-            punkt = QListWidgetItem(QIcon(QPixmap.fromImage(vorschau(art, name))), text)
+            punkt = QListWidgetItem(QIcon(QPixmap.fromImage(vorschau(art, name))), t(text))
             punkt.setData(Qt.ItemDataRole.UserRole, name)
-            punkt.setToolTip(text)
+            punkt.setToolTip(t(text))
             self.raster.addItem(punkt)
             if name == jetzt:
                 self.raster.setCurrentItem(punkt)

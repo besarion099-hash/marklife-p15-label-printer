@@ -12,10 +12,13 @@ from PySide6.QtWidgets import (QComboBox, QDoubleSpinBox, QHBoxLayout, QLabel, Q
 
 from kern import anschluss
 from kern.etikett import GROESSEN
+from kern.sprache import N_, t
 
-EIGENE = "Eigene Größe"
-PAPIERE = [(2, "Etiketten mit Lücke"), (1, "Endlospapier"), (3, "Etiketten mit schwarzer Marke")]
-DICHTEN = [(1, "hell"), (2, "normal"), (3, "dunkel")]
+EIGENE = "Eigene Größe"           # interner Name; angezeigt wird t(EIGENE)
+N_("Eigene Größe")
+PAPIERE = [(2, N_("Etiketten mit Lücke")), (1, N_("Endlospapier")),
+           (3, N_("Etiketten mit schwarzer Marke"))]
+DICHTEN = [(1, N_("hell")), (2, N_("normal")), (3, N_("dunkel"))]
 SYMBOL = Path(__file__).resolve().parent / "symbol.png"
 
 
@@ -33,36 +36,36 @@ class Druckleiste(QWidget):
         self.port.setMinimumWidth(230)
         neu = QToolButton()
         neu.setText("↻")
-        neu.setToolTip("Drucker neu suchen")
+        neu.setToolTip(t("Drucker neu suchen"))
         neu.setObjectName("klein")
         self.groesse = QComboBox()
         for name, _, _ in GROESSEN:
-            self.groesse.addItem(name)
-        self.groesse.addItem(EIGENE)
+            self.groesse.addItem(name, name)
+        self.groesse.addItem(t(EIGENE), EIGENE)
         self.eigene_b = self._mm(einstellungen.eigene_breite_mm)
         self.eigene_h = self._mm(einstellungen.eigene_hoehe_mm)
         self.papier = self._liste(PAPIERE, einstellungen.papiertyp)
         self.dichte = self._liste(DICHTEN, einstellungen.dichte)
         self.kopien = QSpinBox()
         self.kopien.setRange(1, 99)
-        self.knopf = QPushButton(QIcon(str(SYMBOL)), " Drucken")   # Programmsymbol: der P15; Leerzeichen = Abstand
+        self.knopf = QPushButton(QIcon(str(SYMBOL)), " " + t("Drucken"))   # Programmsymbol: der P15; Leerzeichen = Abstand
         self.knopf.setIconSize(QSize(26, 26))
         self.knopf.setObjectName("haupt")          # dunkel, wie die Front des P15
 
         zeile = QHBoxLayout(self)
         zeile.setContentsMargins(6, 4, 6, 4)
-        for beschriftung, feld in (("Drucker:", self.port), (None, neu),
-                                   ("Größe:", self.groesse), (None, self.eigene_b),
-                                   (None, self.eigene_h), ("Papier:", self.papier),
-                                   ("Dichte:", self.dichte), ("Kopien:", self.kopien)):
+        for beschriftung, feld in ((N_("Drucker:"), self.port), (None, neu),
+                                   (N_("Größe:"), self.groesse), (None, self.eigene_b),
+                                   (None, self.eigene_h), (N_("Papier:"), self.papier),
+                                   (N_("Dichte:"), self.dichte), (N_("Kopien:"), self.kopien)):
             if beschriftung:
-                zeile.addWidget(QLabel(beschriftung))
+                zeile.addWidget(QLabel(t(beschriftung)))
             zeile.addWidget(feld)
         zeile.addStretch(1)
         zeile.addWidget(self.knopf)
 
-        index = self.groesse.findText(einstellungen.groesse)
-        self.groesse.setCurrentIndex(index if index >= 0 else self.groesse.findText("30 x 15 mm"))
+        index = self.groesse.findData(einstellungen.groesse)
+        self.groesse.setCurrentIndex(index if index >= 0 else self.groesse.findData("30 x 15 mm"))
         self.ports_neu()
         self._sichtbarkeit()
 
@@ -86,7 +89,7 @@ class Druckleiste(QWidget):
     def _liste(moeglich, aktuell):
         feld = QComboBox()
         for wert, text in moeglich:
-            feld.addItem(text, wert)
+            feld.addItem(t(text), wert)
         feld.setCurrentIndex(max(0, feld.findData(aktuell)))
         return feld
 
@@ -100,7 +103,7 @@ class Druckleiste(QWidget):
         for port in gefunden:
             self.port.addItem(port.beschreibung, port.name)
         if not gefunden:
-            self.port.addItem("Kein Drucker gefunden – einschalten und in Windows koppeln", "")
+            self.port.addItem(t("Kein Drucker gefunden – einschalten und in Windows koppeln"), "")
         self.port.setCurrentIndex(max(0, self.port.findData(self.einstellungen.port)))
         self.port.blockSignals(False)
         self._knopf_pruefen()
@@ -113,7 +116,7 @@ class Druckleiste(QWidget):
         self._knopf_pruefen()
 
     def groesse_mm(self):
-        name = self.groesse.currentText()
+        name = self.groesse.currentData()
         for eintrag, breite, hoehe in GROESSEN:
             if eintrag == name:
                 return breite, hoehe
@@ -122,23 +125,23 @@ class Druckleiste(QWidget):
     def setze_groesse(self, breite, hoehe):
         for name, b, h in GROESSEN:
             if (b, h) == (breite, hoehe):
-                self.groesse.setCurrentText(name)
+                self.groesse.setCurrentIndex(self.groesse.findData(name))
                 return
         self.eigene_b.setValue(breite)
         self.eigene_h.setValue(hoehe)
-        self.groesse.setCurrentText(EIGENE)
+        self.groesse.setCurrentIndex(self.groesse.findData(EIGENE))
 
     def uebernehmen(self):
         e = self.einstellungen
         e.port = self.port.currentData() or ""
-        e.groesse = self.groesse.currentText()
+        e.groesse = self.groesse.currentData()
         e.eigene_breite_mm = self.eigene_b.value()
         e.eigene_hoehe_mm = self.eigene_h.value()
         e.papiertyp = self.papier.currentData()
         e.dichte = self.dichte.currentData()
 
     def _sichtbarkeit(self):
-        eigene = self.groesse.currentText() == EIGENE
+        eigene = self.groesse.currentData() == EIGENE
         self.eigene_b.setVisible(eigene)
         self.eigene_h.setVisible(eigene)
 

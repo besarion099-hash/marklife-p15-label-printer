@@ -15,6 +15,8 @@ from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import ClassVar
 
+from kern.sprache import t
+
 FASSUNG = 1
 DREHUNGEN = (0, 90, 180, 270)
 GROESSEN = [
@@ -118,26 +120,27 @@ def zu_dict(etikett) -> dict:
 
 def aus_dict(daten) -> Etikett:
     if not isinstance(daten, dict):
-        raise VorlagenFehler("Die Datei enthält keine Vorlage.")
+        raise VorlagenFehler(t("Die Datei enthält keine Vorlage."))
     fassung = daten.get("fassung")
     if not isinstance(fassung, int):
-        raise VorlagenFehler("Der Datei fehlt die Fassungsnummer.")
+        raise VorlagenFehler(t("Der Datei fehlt die Fassungsnummer."))
     if fassung > FASSUNG:
         raise VorlagenFehler(
-            f"Die Vorlage stammt aus einer neueren Fassung ({fassung}) dieses Programms.")
+            t("Die Vorlage stammt aus einer neueren Fassung ({fassung}) dieses Programms.",
+              fassung=fassung))
     try:
         etikett = Etikett(float(daten["breite_mm"]), float(daten["hoehe_mm"]))
         for eintrag in daten.get("elemente", []):
             etikett.elemente.append(_element(eintrag))
     except (KeyError, TypeError, ValueError) as fehler:
-        raise VorlagenFehler(f"Die Vorlage ist beschädigt: {fehler}") from fehler
+        raise VorlagenFehler(t("Die Vorlage ist beschädigt: {fehler}", fehler=fehler)) from fehler
     return etikett
 
 
 def _element(eintrag: dict):
     klasse = ARTEN.get(eintrag.get("typ"))
     if klasse is None:
-        raise VorlagenFehler(f"Unbekannte Elementart: {eintrag.get('typ')!r}")
+        raise VorlagenFehler(t("Unbekannte Elementart: {art}", art=repr(eintrag.get("typ"))))
     werte = {}
     for feld in fields(klasse):
         if feld.name in eintrag:
@@ -163,5 +166,5 @@ def laden(pfad) -> Etikett:
     try:
         daten = json.loads(Path(pfad).read_text(encoding="utf-8"))
     except (OSError, ValueError) as fehler:
-        raise VorlagenFehler(f"Die Datei lässt sich nicht lesen: {fehler}") from fehler
+        raise VorlagenFehler(t("Die Datei lässt sich nicht lesen: {fehler}", fehler=fehler)) from fehler
     return aus_dict(daten)

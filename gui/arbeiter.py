@@ -11,6 +11,7 @@ from __future__ import annotations
 from PySide6.QtCore import QObject, QThread, Signal, Slot
 
 from kern.druck import DruckFehler
+from kern.sprache import t
 
 
 class DruckArbeiter(QObject):
@@ -34,7 +35,7 @@ class DruckArbeiter(QObject):
             self.fehler.emit(str(fehler), fehler.fertig)
             return
         except Exception as fehler:          # nichts darf den Thread still sterben lassen
-            self.fehler.emit(f"Unerwarteter Fehler: {fehler}", 0)
+            self.fehler.emit(t("Unerwarteter Fehler: {fehler}", fehler=fehler), 0)
             return
         self.fertig.emit(anzahl)
 

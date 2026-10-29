@@ -14,12 +14,13 @@ from PySide6.QtWidgets import (QAbstractItemView, QDialog, QFileDialog, QGridLay
 from gui.arbeiter import im_hintergrund
 from gui.bilder import startordner, zu_qimage
 from kern import anschluss, druck, platzhalter, serie, zeichnen
+from kern.sprache import N_, t
 
 
 class SerienDialog(QDialog):
     def __init__(self, etikett, einstellungen, eltern=None, verbinden=anschluss.Verbindung):
         super().__init__(eltern)
-        self.setWindowTitle("Serien-Druck")
+        self.setWindowTitle(t("Serien-Druck"))
         self.resize(920, 540)
         self.etikett = etikett
         self.einstellungen = einstellungen
@@ -30,8 +31,8 @@ class SerienDialog(QDialog):
         self._von_start = 1
         self.melden = lambda titel, text: QMessageBox.warning(self, titel, text)
 
-        waehlen = QPushButton("Tabelle wählen …")
-        self.datei = QLabel("Noch keine Datei gewählt (CSV oder Excel).")
+        waehlen = QPushButton(t("Tabelle wählen …"))
+        self.datei = QLabel(t("Noch keine Datei gewählt (CSV oder Excel)."))
         self.ansicht = QTableWidget()
         self.ansicht.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.ansicht.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -46,12 +47,12 @@ class SerienDialog(QDialog):
             feld.setEnabled(False)            # erst nach dem Laden einer Tabelle
         self.kopien.setRange(1, 99)
         self.balken = QProgressBar()
-        self.drucken_knopf = QPushButton("Drucken")
+        self.drucken_knopf = QPushButton(t("Drucken"))
         self.drucken_knopf.setObjectName("haupt")
         self.drucken_knopf.setEnabled(False)
-        self.abbrechen_knopf = QPushButton("Abbrechen")
+        self.abbrechen_knopf = QPushButton(t("Abbrechen"))
         self.abbrechen_knopf.setEnabled(False)
-        schliessen = QPushButton("Schließen")
+        schliessen = QPushButton(t("Schließen"))
 
         oben = QHBoxLayout()
         oben.addWidget(waehlen)
@@ -64,9 +65,9 @@ class SerienDialog(QDialog):
         rechts.addStretch(1)
         mitte.addLayout(rechts, 1)
         unten = QGridLayout()
-        for spalte, (text, feld) in enumerate((("Zeilen von", self.von), ("bis", self.bis),
-                                                ("Kopien je Zeile", self.kopien))):
-            unten.addWidget(QLabel(text), 0, 2 * spalte)
+        for spalte, (text, feld) in enumerate(((N_("Zeilen von"), self.von), (N_("bis"), self.bis),
+                                                (N_("Kopien je Zeile"), self.kopien))):
+            unten.addWidget(QLabel(t(text)), 0, 2 * spalte)
             unten.addWidget(feld, 0, 2 * spalte + 1)
         unten.addWidget(self.balken, 1, 0, 1, 6)
         knoepfe = QHBoxLayout()
@@ -84,9 +85,9 @@ class SerienDialog(QDialog):
         schliessen.clicked.connect(self.reject)
 
     def _waehlen(self):
-        pfad, _ = QFileDialog.getOpenFileName(self, "Tabelle wählen",
+        pfad, _ = QFileDialog.getOpenFileName(self, t("Tabelle wählen"),
                                               startordner(self.einstellungen),
-                                              "Tabellen (*.csv *.xlsx)")
+                                              t("Tabellen (*.csv *.xlsx)"))
         if pfad:
             self.einstellungen.letzter_ordner = str(Path(pfad).parent)
             self.lade(pfad)
@@ -95,7 +96,7 @@ class SerienDialog(QDialog):
         try:
             tabelle = serie.lesen(pfad)
         except serie.TabellenFehler as fehler:
-            self.melden("Serien-Druck", str(fehler))
+            self.melden(t("Serien-Druck"), str(fehler))
             return False
         self.tabelle = tabelle
         self.datei.setText(Path(pfad).name)
@@ -111,8 +112,8 @@ class SerienDialog(QDialog):
                     eintrag.setBackground(QColor("#ffd0d0"))
                 self.ansicht.setItem(zeile, spalte, eintrag)
         self.hinweis.setText(
-            "Diese Platzhalter haben keine Spalte: "
-            + ", ".join("{{%s}}" % name for name in fehlend) if fehlend else "")
+            t("Diese Platzhalter haben keine Spalte: {namen}",
+              namen=", ".join("{{%s}}" % name for name in fehlend)) if fehlend else "")
         anzahl = len(tabelle.zeilen)
         for feld in (self.von, self.bis):
             feld.setRange(1, max(1, anzahl))
@@ -169,9 +170,10 @@ class SerienDialog(QDialog):
         weiter = self._von_start + fertig // self._kopien
         if weiter <= self.bis.value():
             self.von.setValue(weiter)
-        self.melden("Serien-Druck",
-                    f"{meldung}\n\n{fertig} Etikett(en) sind fertig. „Zeilen von“ steht jetzt "
-                    f"auf {self.von.value()}, damit es dort weitergeht.")
+        self.melden(t("Serien-Druck"),
+                    t("{meldung}\n\n{fertig} Etikett(en) sind fertig. „Zeilen von“ steht jetzt "
+                      "auf {zeile}, damit es dort weitergeht.",
+                      meldung=meldung, fertig=fertig, zeile=self.von.value()))
 
     def _abbrechen(self):
         if self._arbeiter is not None:
