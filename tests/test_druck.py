@@ -6,7 +6,7 @@ from kern import druck
 from kern.einstellungen import Einstellungen
 from kern.etikett import Etikett, QRCode, Rahmen, Text
 
-E = Einstellungen(port="COM13")          # drehung_grad 270, Papiertyp 2, Dichte 2
+E = Einstellungen(port="COM13", drehung_grad=270, rand_ende_mm=3.9, versatz_mm=0.0)
 
 
 def _serie():
@@ -105,7 +105,8 @@ def test_rand_bei_gedrehtem_druck():
 
 
 def test_vorgabe_rand_ist_am_p15_gemessen():
-    assert Einstellungen().rand_ende_mm == 3.9
+    assert (Einstellungen().drehung_grad, Einstellungen().rand_ende_mm,
+            Einstellungen().versatz_mm) == (90, 1.0, 1.0)      # am P15 bestaetigt 29.10.2026
 
 
 def test_versatz_schiebt_inhalt_nach_rechts_ohne_abzuschneiden():

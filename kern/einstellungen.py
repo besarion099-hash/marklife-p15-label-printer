@@ -31,9 +31,9 @@ class Einstellungen:
     eigene_hoehe_mm: float = 12.0
     papiertyp: int = 2          # 1 Endlos, 2 Etikett mit Luecke, 3 schwarze Marke
     dichte: int = 2             # 1 hell, 2 normal, 3 dunkel
-    drehung_grad: int = 270     # im Uhrzeigersinn vor dem Senden; am P15 bestaetigt
-    rand_ende_mm: float = 3.9   # nicht bedruckbarer Streifen am Etikettende (P15 gemessen)
-    versatz_mm: float = 0.0     # Feinjustage: Inhalt nach rechts (+) oder links (-) schieben
+    drehung_grad: int = 90      # im Uhrzeigersinn vor dem Senden; am P15 bestaetigt 29.10.2026
+    rand_ende_mm: float = 1.0   # nicht bedruckbarer Streifen am Etikettende (Lineal 29.10.2026)
+    versatz_mm: float = 1.0     # Feinjustage: Inhalt nach rechts (+) oder links (-) schieben
     blockgroesse: int = 512
     pause_ms: int = 20
     letzter_ordner: str = ""

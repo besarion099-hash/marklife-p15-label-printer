@@ -23,7 +23,7 @@ def test_falsche_typen_und_werte_werden_ignoriert(tmp_path):
     assert e.port == ""
     assert e.dichte == 2
     assert e.papiertyp == 2
-    assert e.drehung_grad == 270
+    assert e.drehung_grad == 90                     # Vorgabe
     assert e.blockgroesse == 512
     assert e.eigene_hoehe_mm == 14.0
 
