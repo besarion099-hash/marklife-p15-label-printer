@@ -3,9 +3,10 @@
 
 Gezeigt wird genau das Bild, das auch der Drucker bekommt
 (kern.zeichnen), Punkt fuer Punkt ohne Glaettung. Die Rahmen der
-Elemente liegen darueber: anklicken waehlt, ziehen verschiebt, das
-Quadrat unten rechts aendert die Groesse. Alles rastet auf einen
-Druckpunkt (1/8 mm) ein.
+Elemente liegen darueber: anklicken waehlt, ziehen verschiebt. Das
+gewaehlte Element hat acht Griffe (Ecken und Seitenmitten); auch jede
+Kante laesst sich direkt fassen. Alles rastet auf einen Druckpunkt
+(1/8 mm) ein.
 """
 
 from __future__ import annotations
@@ -18,12 +19,39 @@ from gui.bilder import zu_qimage
 from kern import zeichnen
 from kern.etikett import Etikett, ragt_ueber
 
-GRIFF = 10        # Kantenlaenge des Griffs in Bildschirmpunkten
+GRIFF = 9         # Kantenlaenge eines Griffs in Bildschirmpunkten
+KANTE = 4         # so nah an einer Kante des gewaehlten Elements fasst man die Kante
 RAND = 20
+MINDEST_MM = 1.0
+
+# Richtung eines Griffs: (-1 links, 0 Mitte, 1 rechts), (-1 oben, 0 Mitte, 1 unten).
+# Ecken zuerst, damit sie bei kleinen Elementen vor den Seiten greifen.
+RICHTUNGEN = [(1, 1), (-1, -1), (1, -1), (-1, 1), (0, -1), (0, 1), (-1, 0), (1, 0)]
+_C = Qt.CursorShape
+ZEIGER = {(1, 1): _C.SizeFDiagCursor, (-1, -1): _C.SizeFDiagCursor,
+          (1, -1): _C.SizeBDiagCursor, (-1, 1): _C.SizeBDiagCursor,
+          (0, -1): _C.SizeVerCursor, (0, 1): _C.SizeVerCursor,
+          (-1, 0): _C.SizeHorCursor, (1, 0): _C.SizeHorCursor}
 
 
 def einrasten(mm: float) -> float:
     return round(mm * zeichnen.PUNKTE_JE_MM) / zeichnen.PUNKTE_JE_MM
+
+
+def _lage(anfang, ende, seite):
+    return anfang if seite < 0 else ende if seite > 0 else (anfang + ende) / 2
+
+
+def achse(anfang, laenge, delta, seite):
+    """Neue (anfang, laenge) auf einer Achse, wenn die Kante seite um delta
+    wandert: -1 bewegt den Anfang (das Ende bleibt), 1 das Ende, 0 nichts."""
+    if seite > 0:
+        return anfang, max(MINDEST_MM, einrasten(laenge + delta))
+    if seite < 0:
+        ende = anfang + laenge
+        neu = min(einrasten(anfang + delta), ende - MINDEST_MM)
+        return neu, ende - neu
+    return anfang, laenge
 
 
 class Flaeche(QWidget):
@@ -42,6 +70,7 @@ class Flaeche(QWidget):
         self._start_werte = (0.0, 0.0, 0.0, 0.0)
         self.setMinimumSize(400, 200)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setMouseTracking(True)        # Zeiger zeigt schon beim Darueberfahren die Richtung
         self.neu_zeichnen()
 
     def setze_etikett(self, etikett):
@@ -68,8 +97,35 @@ class Flaeche(QWidget):
         return QRectF(links + element.x_mm * zoom, oben + element.y_mm * zoom,
                       element.breite_mm * zoom, element.hoehe_mm * zoom)
 
-    def griff(self, rechteck: QRectF) -> QRectF:
-        return QRectF(rechteck.right() - GRIFF / 2, rechteck.bottom() - GRIFF / 2, GRIFF, GRIFF)
+    def griffe(self, rechteck: QRectF) -> dict:
+        return {(sx, sy): QRectF(_lage(rechteck.left(), rechteck.right(), sx) - GRIFF / 2,
+                                 _lage(rechteck.top(), rechteck.bottom(), sy) - GRIFF / 2,
+                                 GRIFF, GRIFF)
+                for sx, sy in RICHTUNGEN}
+
+    def griff(self, rechteck: QRectF, richtung=(1, 1)) -> QRectF:
+        return self.griffe(rechteck)[richtung]
+
+    def _gewaehlt(self):
+        elemente = self.etikett.elemente
+        return elemente[self.auswahl] if 0 <= self.auswahl < len(elemente) else None
+
+    def griff_an(self, pos: QPointF):
+        """Richtung des Griffs oder der Kante des gewaehlten Elements unter pos, sonst None."""
+        element = self._gewaehlt()
+        if element is None:
+            return None
+        rechteck = self.rechteck(element)
+        for richtung, feld in self.griffe(rechteck).items():
+            if feld.contains(pos):
+                return richtung
+        if not rechteck.adjusted(-KANTE, -KANTE, KANTE, KANTE).contains(pos):
+            return None
+        sx = (-1 if abs(pos.x() - rechteck.left()) <= KANTE
+              else 1 if abs(pos.x() - rechteck.right()) <= KANTE else 0)
+        sy = (-1 if abs(pos.y() - rechteck.top()) <= KANTE
+              else 1 if abs(pos.y() - rechteck.bottom()) <= KANTE else 0)
+        return (sx, sy) if (sx, sy) != (0, 0) else None
 
     def treffer(self, pos: QPointF) -> int:
         for index in range(len(self.etikett.elemente) - 1, -1, -1):
@@ -128,17 +184,19 @@ class Flaeche(QWidget):
         rechteck = self.rechteck(element)
         maler.drawRect(rechteck)
         if gewaehlt:
-            maler.fillRect(self.griff(rechteck), farbe)
+            maler.setPen(QPen(farbe, 1.5))
+            maler.setBrush(Qt.GlobalColor.white)
+            for feld in self.griffe(rechteck).values():
+                maler.drawRect(feld)
 
     def mousePressEvent(self, ereignis):
         if ereignis.button() != Qt.MouseButton.LeftButton:
             return
         pos = ereignis.position()
         self.setFocus()
-        gewaehlt = (self.etikett.elemente[self.auswahl]
-                    if 0 <= self.auswahl < len(self.etikett.elemente) else None)
-        if gewaehlt is not None and self.griff(self.rechteck(gewaehlt)).contains(pos):
-            self._modus = "groesse"
+        richtung = self.griff_an(pos)
+        if richtung is not None:
+            self._modus = richtung
         else:
             index = self.treffer(pos)
             self.waehle(index)
@@ -149,10 +207,11 @@ class Flaeche(QWidget):
             self._start_werte = (element.x_mm, element.y_mm, element.breite_mm, element.hoehe_mm)
 
     def mouseMoveEvent(self, ereignis):
+        pos = ereignis.position()
         if self._modus is None:
+            self._zeiger(pos)
             return
         zoom, _, _ = self.massstab()
-        pos = ereignis.position()
         dx = (pos.x() - self._start.x()) / zoom
         dy = (pos.y() - self._start.y()) / zoom
         x, y, breite, hoehe = self._start_werte
@@ -160,13 +219,24 @@ class Flaeche(QWidget):
         if self._modus == "ziehen":
             element.x_mm, element.y_mm = einrasten(x + dx), einrasten(y + dy)
         else:
-            element.breite_mm = max(1.0, einrasten(breite + dx))
-            element.hoehe_mm = max(1.0, einrasten(hoehe + dy))
+            sx, sy = self._modus
+            element.x_mm, element.breite_mm = achse(x, breite, dx, sx)
+            element.y_mm, element.hoehe_mm = achse(y, hoehe, dy, sy)
         self.neu_zeichnen()
         self.geaendert.emit()
 
     def mouseReleaseEvent(self, ereignis):
         self._modus = None
+        self._zeiger(ereignis.position())
+
+    def _zeiger(self, pos):
+        richtung = self.griff_an(pos)
+        if richtung is not None:
+            self.setCursor(ZEIGER[richtung])
+        elif self.treffer(pos) >= 0:
+            self.setCursor(Qt.CursorShape.SizeAllCursor)
+        else:
+            self.unsetCursor()
 
     def keyPressEvent(self, ereignis):
         if ereignis.key() == Qt.Key.Key_Delete:
