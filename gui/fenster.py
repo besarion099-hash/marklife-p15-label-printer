@@ -98,6 +98,7 @@ class Hauptfenster(QMainWindow):
         self._eintrag(datei, "&Beenden", self.close)
         drucker = self.menuBar().addMenu("D&rucker")
         self._eintrag(drucker, "&Ausrichtung testen …", self.ausrichtung_testen)
+        self._eintrag(drucker, "&Lage feinjustieren …", self.lage_feinjustieren)
         self._eintrag(drucker, "Drucker &neu suchen", self.leiste.ports_neu)
 
     def _eintrag(self, menue, text, funktion, kurz=None):
@@ -251,6 +252,16 @@ class Hauptfenster(QMainWindow):
             self.e.drehung_grad = int(wahl.rstrip("°"))
             self._einstellungen_sichern()
             self.statusBar().showMessage(f"Drehung {wahl} gespeichert.", 8000)
+
+    def lage_feinjustieren(self):
+        wert, ok = QInputDialog.getDouble(
+            self, "Lage feinjustieren",
+            "Druck verschieben in mm (+ nach rechts, − nach links):",
+            self.e.versatz_mm, -10.0, 10.0, 1)
+        if ok:
+            self.e.versatz_mm = wert
+            self._einstellungen_sichern()
+            self.statusBar().showMessage(f"Versatz {wert:+.1f} mm gespeichert.", 8000)
 
     def _im_hintergrund(self, aufgabe, was, danach=None):
         if self._faden is not None and self._faden.isRunning():

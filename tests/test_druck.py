@@ -106,3 +106,12 @@ def test_rand_bei_gedrehtem_druck():
 
 def test_vorgabe_rand_ist_am_p15_gemessen():
     assert Einstellungen().rand_ende_mm == 3.9
+
+
+def test_versatz_schiebt_inhalt_nach_rechts():
+    etikett = Etikett(10, 2, [Rahmen(x_mm=0, y_mm=0, breite_mm=1, hoehe_mm=2, strich_mm=1)])
+    ohne = druck.druckbild(etikett, None, 0)
+    mit = druck.druckbild(etikett, None, 0, versatz_mm=2)
+    assert ohne.size == mit.size
+    assert ohne.getpixel((18, 8)) == 0 and mit.getpixel((18, 8)) == 255   # +16: mittig auf 112
+    assert mit.getpixel((18 + 16, 8)) == 0                 # 2 mm = 16 Punkte weiter rechts

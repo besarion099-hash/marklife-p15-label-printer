@@ -33,6 +33,7 @@ class Einstellungen:
     dichte: int = 2             # 1 hell, 2 normal, 3 dunkel
     drehung_grad: int = 270     # im Uhrzeigersinn vor dem Senden; am P15 bestaetigt
     rand_ende_mm: float = 3.9   # nicht bedruckbarer Streifen am Etikettende (P15 gemessen)
+    versatz_mm: float = 0.0     # Feinjustage: Inhalt nach rechts (+) oder links (-) schieben
     blockgroesse: int = 512
     pause_ms: int = 20
     letzter_ordner: str = ""
