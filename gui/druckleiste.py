@@ -3,7 +3,10 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Signal
+from pathlib import Path
+
+from PySide6.QtCore import QSize, Signal
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (QComboBox, QDoubleSpinBox, QHBoxLayout, QLabel, QPushButton,
                                QSpinBox, QToolButton, QWidget)
 
@@ -13,6 +16,7 @@ from kern.etikett import GROESSEN
 EIGENE = "Eigene Größe"
 PAPIERE = [(2, "Etiketten mit Lücke"), (1, "Endlospapier"), (3, "Etiketten mit schwarzer Marke")]
 DICHTEN = [(1, "hell"), (2, "normal"), (3, "dunkel")]
+SYMBOL = Path(__file__).resolve().parent / "symbol.png"
 
 
 class Druckleiste(QWidget):
@@ -41,7 +45,8 @@ class Druckleiste(QWidget):
         self.dichte = self._liste(DICHTEN, einstellungen.dichte)
         self.kopien = QSpinBox()
         self.kopien.setRange(1, 99)
-        self.knopf = QPushButton("Drucken")
+        self.knopf = QPushButton(QIcon(str(SYMBOL)), " Drucken")   # Programmsymbol: der P15; Leerzeichen = Abstand
+        self.knopf.setIconSize(QSize(26, 26))
         self.knopf.setObjectName("haupt")          # dunkel, wie die Front des P15
 
         zeile = QHBoxLayout(self)

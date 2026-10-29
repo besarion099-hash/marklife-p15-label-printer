@@ -144,6 +144,7 @@ def test_werkzeuge_haben_symbole(qapp, tmp_path):
     assert all(not a.icon().isNull() for a in knoepfe)
     assert knoepfe[-1].text() == "Serien-Druck …"
     assert fenster.leiste.knopf.objectName() == "haupt"
+    assert not fenster.leiste.knopf.icon().isNull() and fenster.leiste.knopf.text().strip() == "Drucken"
 
 
 def test_bild_nimmt_fehlerverteilung(qapp, tmp_path, monkeypatch):
